@@ -1,0 +1,1196 @@
+{
+  "info": {
+    "_postman_id": "8c6b1ee7-70f6-4f88-a25d-fd27a08b84fb",
+    "name": "Kafka Rest Proxy API",
+    "description": "Adapted from https://docs.confluent.io/current/kafka-rest/api.html",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "23715081"
+  },
+  "item": [
+    {
+      "name": "v2",
+      "item": [
+        {
+          "name": "Topics",
+          "item": [
+            {
+              "name": "/topics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{RestProxy}}/topics",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "topics"
+                  ]
+                },
+                "description": "Get a list of Kafka topics."
+              },
+              "response": []
+            },
+            {
+              "name": "/topics/(topic_name)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{RestProxy}}/topics/{{topic_name}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "topics",
+                    "{{topic_name}}"
+                  ]
+                },
+                "description": "Get metadata about a specific topic."
+              },
+              "response": []
+            },
+            {
+              "name": "/topics/(topic_name)",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"records\": [\r\n    {\r\n      \"key\": \"a2V5\",\r\n      \"value\": \"Y29uZmx1ZW50\"\r\n    },\r\n    {\r\n      \"value\": \"a2Fma2E=\",\r\n      \"partition\": 1\r\n    },\r\n    {\r\n      \"value\": \"bG9ncw==\"\r\n    }\r\n  ]\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/topics/{{topic_name}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "topics",
+                    "{{topic_name}}"
+                  ]
+                },
+                "description": "Produce messages to a topic, optionally specifying keys or partitions for the messages. If no partition is provided, one will be chosen based on the hash of the key. If no key is provided, the partition will be chosen for each message in a round-robin fashion.\r\n\r\nFor the avro, protobuf, and jsonschema embedded formats, you must provide information about schemas and the REST Proxy must be configured with the URL to access Schema Registry (schema.registry.url). Schemas may be provided as the full schema encoded as a string, or, after the initial request may be provided as the schema ID returned with the first response."
+              },
+              "response": []
+            }
+          ],
+          "description": "The topics resource provides information about the topics in your Kafka cluster and their current state. It also lets you produce messages by making POST requests to specific topics.",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Partitions",
+          "item": [
+            {
+              "name": "/topics/(topic_name)/partitions",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{RestProxy}}/topics/{{topic_name}}/partitions",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions"
+                  ]
+                },
+                "description": "The partitions resource provides per-partition metadata, including the current leaders and replicas for each partition. It also allows you to consume and produce messages to single partition using GET and POST requests."
+              },
+              "response": []
+            },
+            {
+              "name": "/topics/(topic_name)/partitions/(partition_id)",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{RestProxy}}/topics/{{topic_name}}/partitions/{{partition_id}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions",
+                    "{{partition_id}}"
+                  ]
+                },
+                "description": "Get metadata about a single partition in the topic."
+              },
+              "response": []
+            },
+            {
+              "name": "/topics/(topic_name)/partitions/(partition_id)/offsets",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{RestProxy}}/topics/{{topic_name}}/partitions/{{partition_id}}/offsets",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions",
+                    "{{partition_id}}",
+                    "offsets"
+                  ]
+                },
+                "description": "Get a summary of the offsets in this topic partition."
+              },
+              "response": []
+            },
+            {
+              "name": "/topics/(topic_name)/partitions/(partition_id)",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "",
+                    "type": "text",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"records\": [\r\n    {\r\n      \"key\": \"somekey\",\r\n      \"value\": \"{\\\"foo\\\": \\\"bar\\\"}\"\r\n    },\r\n    {\r\n      \"value\": 53.5\r\n    }\r\n  ]\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/topics/{{topic_name}}/partitions/{{partition_id}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions",
+                    "{{partition_id}}"
+                  ]
+                },
+                "description": "Produce messages to one partition of the topic. For the Avro, JSON Schema, and Protobuf embedded formats, you must provide information about schemas. This may be provided as the full schema encoded as a string, or, after the initial request may be provided as the schema ID returned with the first response."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Consumers",
+          "item": [
+            {
+              "name": "/consumers/(group_name)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/vnd.kafka.v2+json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"{{consumer_instance}}\",\r\n  \"format\": \"binary\",\r\n  \"auto.offset.reset\": \"earliest\",\r\n  \"auto.commit.enable\": \"false\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}"
+                  ]
+                },
+                "description": "Create a new consumer instance in the consumer group. The format parameter controls the deserialization of data from Kafka and the content type that must be used in the Accept header of subsequent read API requests performed against this consumer. For example, if the creation request specifies avro for the format, subsequent read requests should use Accept: application/vnd.kafka.avro.v2+json.\r\n\r\nNote that the response includes a URL including the host since the consumer is stateful and tied to a specific REST Proxy instance. Subsequent examples in this section use a Host header for this specific REST Proxy instance."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/vnd.kafka.v2+json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}"
+                  ]
+                },
+                "description": "Destroy the consumer instance.\r\n\r\nNote that this request must be made to the specific REST Proxy instance holding the consumer instance."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/offsets",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "// Uncomment below to specify specific offsets to commit\r\n\r\n// {\r\n//   \"offsets\": [\r\n//     {\r\n//       \"topic\": \"{{topic_name}}\",\r\n//       \"partition\": {{partition_id}},\r\n//       \"offset\": 20\r\n//     },\r\n//     {\r\n//       \"topic\": \"{{topic_name}}\",\r\n//       \"partition\": {{partition_id}},\r\n//       \"offset\": 42\r\n//     }\r\n//   ]\r\n// }\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/offsets",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "offsets"
+                  ]
+                },
+                "description": "Commit a list of offsets for the consumer. When the post body is empty, it commits all the records that have been fetched by the consumer instance.\r\n\r\nNote that this request must be made to the specific REST Proxy instance holding the consumer instance."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/offsets",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/vnd.kafka.v2+json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"partitions\": [\r\n    {\r\n      \"topic\": \"{{topic_name}}\",\r\n      \"partition\": {{partition_id}}\r\n    }\r\n\r\n  ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/offsets",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "offsets"
+                  ]
+                },
+                "description": "Get the last committed offsets for the given partitions (whether the commit happened by this process or another).\r\n\r\nNote that this request must be made to the specific REST Proxy instance holding the consumer instance."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/subscription",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/vnd.kafka.v2+json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"topics\": [\r\n    \"{{topic_name}}\"\r\n  ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/subscription",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "subscription"
+                  ]
+                },
+                "description": "Subscribe to the given list of topics or a topic pattern to get dynamically assigned partitions. If a prior subscription exists, it would be replaced by the latest subscription."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/subscription",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/subscription",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "subscription"
+                  ]
+                },
+                "description": "Get the current subscribed list of topics."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/subscription",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/subscription",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "subscription"
+                  ]
+                },
+                "description": "Unsubscribe from topics currently subscribed.\r\n\r\nNote that this request must be made to the specific REST Proxy instance holding the consumer instance."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/assignments",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/vnd.kafka.v2+json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"partitions\": [\r\n    {\r\n      \"topic\": \"{{topic_name}}\",\r\n      \"partition\": {{partition_id}}\r\n    }\r\n\r\n  ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/assignments",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "assignments"
+                  ]
+                },
+                "description": "Manually assign a list of partitions to this consumer."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/positions/beginning",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.kafka.v2+json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"partitions\": [\r\n    {\r\n      \"topic\": \"{{topic_name}}\",\r\n      \"partition\": {{partition_id}}\r\n    }\r\n\r\n  ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/positions/beginning",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "positions",
+                    "beginning"
+                  ]
+                },
+                "description": "Seek to the first offset for each of the given partitions."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/positions/end",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.kafka.v2+json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"partitions\": [\r\n    {\r\n      \"topic\": \"{{topic_name}}\",\r\n      \"partition\": {{partition_id}}\r\n    }\r\n\r\n  ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/positions/end",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "positions",
+                    "end"
+                  ]
+                },
+                "description": "Seek to the last offset for each of the given partitions."
+              },
+              "response": []
+            },
+            {
+              "name": "/consumers/(group_name)/instances/(instance)/records",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.kafka.v2+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/consumers/{{group_name}}/instances/{{consumer_instance}}/records",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "consumers",
+                    "{{group_name}}",
+                    "instances",
+                    "{{consumer_instance}}",
+                    "records"
+                  ]
+                },
+                "description": "Fetch data for the topics or partitions specified using one of the subscribe/assign APIs.\r\n\r\nThe format of the embedded data returned by this request is determined by the format specified in the initial consumer instance creation request and must match the format of the Accept header. Mismatches will result in error code 40601.\r\n\r\nNote that this request must be made to the specific REST Proxy instance holding the consumer instance."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Brokers",
+          "item": [
+            {
+              "name": "/brokers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.kafka.v2+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/brokers",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "brokers"
+                  ]
+                },
+                "description": "Get a list of brokers."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "v3",
+      "item": [
+        {
+          "name": "Clusters",
+          "item": [
+            {
+              "name": "/v3/clusters",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters"
+                  ]
+                },
+                "description": "List the clusters. Because the REST Proxy can only connect to a single Kafka cluster, this list will always return a single cluster."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}"
+                  ]
+                },
+                "description": "Get a cluster."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Brokers",
+          "item": [
+            {
+              "name": "/v3/clusters/(cluster_id)/brokers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/brokers",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "brokers"
+                  ]
+                },
+                "description": "List the brokers belonging to a given cluster."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/brokers/(broker_id)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/brokers/{{broker_id}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "brokers",
+                    "{{broker_id}}"
+                  ]
+                },
+                "description": "Get a broker."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Topics",
+          "item": [
+            {
+              "name": "/v3/clusters/(cluster_id)/topics",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics"
+                  ]
+                },
+                "description": "List the topics belonging to a given cluster."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}"
+                  ]
+                },
+                "description": "Get a topic."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"data\": {\r\n    \"attributes\": {\r\n      \"topic_name\": \"{{topic_name}}\",\r\n      \"partitions_count\": 2,\r\n      \"replication_factor\": 1,\r\n      \"configs\": [\r\n        {\r\n          \"name\": \"cleanup.policy\",\r\n          \"value\": \"compact\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics"
+                  ]
+                },
+                "description": "Create a topic."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}"
+                  ]
+                },
+                "description": "Delete a topic."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Topic Configuration",
+          "item": [
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/configs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/configs",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "configs"
+                  ]
+                },
+                "description": "List the configs of a given topic."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/configs/(name)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/configs/cleanup.policy",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "configs",
+                    "cleanup.policy"
+                  ]
+                },
+                "description": "Get a config."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/configs/(name)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"data\": {\r\n    \"attributes\": {\r\n      \"value\": \"compact\"\r\n    }\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/configs/cleanup.policy",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "configs",
+                    "cleanup.policy"
+                  ]
+                },
+                "description": "Set the value of a config."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/configs/(name)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/configs/cleanup.policy",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "configs",
+                    "cleanup.policy"
+                  ]
+                },
+                "description": "Reset a config to its default value."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Partitions",
+          "item": [
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/partitions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/partitions",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions"
+                  ]
+                },
+                "description": "List the partitions of a given topic."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/partitions/(partition_id)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/partitions/{{partition_id}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions",
+                    "{{partition_id}}"
+                  ]
+                },
+                "description": "Get a Partition."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Replicas",
+          "item": [
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/partitions/(partition_id)/replicas",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/partitions/{{partition_id}}/replicas",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions",
+                    "{{partition_id}}",
+                    "replicas"
+                  ]
+                },
+                "description": "List the replicas of a given Partition."
+              },
+              "response": []
+            },
+            {
+              "name": "/v3/clusters/(cluster_id)/topics/(topic_name)/partitions/(partition_id)/replicas/(broker_id)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "type": "text",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{RestProxy}}/v3/clusters/{{cluster_id}}/topics/{{topic_name}}/partitions/{{partition_id}}/replicas/{{broker_id}}",
+                  "host": [
+                    "{{RestProxy}}"
+                  ],
+                  "path": [
+                    "v3",
+                    "clusters",
+                    "{{cluster_id}}",
+                    "topics",
+                    "{{topic_name}}",
+                    "partitions",
+                    "{{partition_id}}",
+                    "replicas",
+                    "{{broker_id}}"
+                  ]
+                },
+                "description": "Get a replica."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "RestProxy",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "topic_name",
+      "value": "test"
+    },
+    {
+      "key": "partition_id",
+      "value": "0"
+    },
+    {
+      "key": "group_name",
+      "value": "testgroup"
+    },
+    {
+      "key": "consumer_instance",
+      "value": "my_consumer"
+    },
+    {
+      "key": "cluster_id",
+      "value": "cluster-1"
+    },
+    {
+      "key": "broker_id",
+      "value": "1"
+    }
+  ]
+}
