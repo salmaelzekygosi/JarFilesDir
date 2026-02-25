@@ -38,7 +38,7 @@ public class SimpleProducer {
         }
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
-        props.put("schema.registry.url", "https://sr-route-confluent-internal.apps.appsqaocp.gosi.ins");
+        props.put("schema.registry.url", "https://sr-test.apps.appsqaocp.gosi.ins");
 
         // Auto-register schema on first publish — no manual intervention needed
         props.put("auto.register.schemas", "true");
