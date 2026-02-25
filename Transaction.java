@@ -1,22 +1,54 @@
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+
 /**
- * Transaction POJO — used by KafkaJsonSchemaSerializer to auto-generate
- * a proper JSON Schema with typed fields and register it in Schema Registry.
+ * Transaction POJO — annotated so KafkaJsonSchemaSerializer
+ * auto-generates the exact JSON Schema we want.
  */
 public class Transaction {
 
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Unique transaction identifier")
     private String transactionId;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Account identifier")
     private String accountId;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Transaction amount")
     private double amount;
-    private String currency;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Currency code")
+    private Currency currency;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Merchant name")
     private String merchant;
-    private String country;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Country code")
+    private Country country;
+
+    @JsonProperty(required = true)
+    @JsonPropertyDescription("Epoch milliseconds")
     private long timestamp;
+
+    // Enums for currency and country — serializer generates "enum" in schema
+    public enum Currency {
+        SAR, AED, USD, GBP, EUR
+    }
+
+    public enum Country {
+        SA, AE, US, GB, EG
+    }
 
     public Transaction() {
     }
 
     public Transaction(String transactionId, String accountId, double amount,
-            String currency, String merchant, String country, long timestamp) {
+            Currency currency, String merchant, Country country, long timestamp) {
         this.transactionId = transactionId;
         this.accountId = accountId;
         this.amount = amount;
@@ -50,11 +82,11 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(Currency currency) {
         this.currency = currency;
     }
 
@@ -66,11 +98,11 @@ public class Transaction {
         this.merchant = merchant;
     }
 
-    public String getCountry() {
+    public Country getCountry() {
         return country;
     }
 
-    public void setCountry(String country) {
+    public void setCountry(Country country) {
         this.country = country;
     }
 

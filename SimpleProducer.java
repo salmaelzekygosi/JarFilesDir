@@ -19,8 +19,6 @@ public class SimpleProducer {
 
     private static final String[] ACCOUNTS = { "ACC-1001", "ACC-1002", "ACC-1003", "ACC-1004", "ACC-1005" };
     private static final String[] MERCHANTS = { "Amazon", "Jarir Bookstore", "Carrefour", "STC Pay", "Noon" };
-    private static final String[] CURRENCIES = { "SAR", "AED", "USD", "GBP", "EUR" };
-    private static final String[] COUNTRIES = { "SA", "AE", "US", "GB", "EG" };
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
@@ -45,6 +43,7 @@ public class SimpleProducer {
         // Auto-register schema on first publish — no manual intervention needed
         props.put("auto.register.schemas", "true");
         props.put("json.fail.invalid.schema", "true");
+        props.put("json.oneof.for.nullables", "false");
 
         // Schema Registry TLS (reuse broker truststore)
         props.put("schema.registry.ssl.truststore.location",
@@ -96,9 +95,9 @@ public class SimpleProducer {
                 txnId,
                 accountId,
                 amount,
-                CURRENCIES[rnd.nextInt(CURRENCIES.length)],
+                Transaction.Currency.values()[rnd.nextInt(Transaction.Currency.values().length)],
                 MERCHANTS[idx],
-                COUNTRIES[rnd.nextInt(COUNTRIES.length)],
+                Transaction.Country.values()[rnd.nextInt(Transaction.Country.values().length)],
                 System.currentTimeMillis());
     }
 }
