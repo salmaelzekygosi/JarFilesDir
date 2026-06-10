@@ -1,0 +1,4 @@
+com\gosi\kafka\Payment.class
+com\gosi\kafka\PaymentProducer.class
+com\gosi\kafka\PaymentConsumer.class
+com\gosi\kafka\PaymentResource.class
