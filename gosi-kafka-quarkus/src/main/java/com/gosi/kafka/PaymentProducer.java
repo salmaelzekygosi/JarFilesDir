@@ -8,27 +8,25 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
 import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
+// Generated Avro Class
+import com.gosi.kafka.avro.PaymentRecord;
 
 @ApplicationScoped
 public class PaymentProducer {
 
     @Inject
     @Channel("payments-out")
-    Emitter<String> emitter;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    Emitter<PaymentRecord> emitter;
 
     public void publishPayment(Payment payment) {
         try {
-            // Serialize payload to JSON String
-            String jsonPayload = objectMapper.writeValueAsString(payment);
-            
-            // Fallback trace-id if not provided
+            // Validate / create traceId
             String traceId = payment.getTraceId();
             if (traceId == null || traceId.isBlank()) {
-                traceId = java.util.UUID.randomUUID().toString();
+                traceId = UUID.randomUUID().toString();
                 payment.setTraceId(traceId);
             }
 
@@ -36,17 +34,25 @@ public class PaymentProducer {
             RecordHeaders headers = new RecordHeaders();
             headers.add("trace-id", traceId.getBytes(StandardCharsets.UTF_8));
 
+            // Create the generated Avro record
+            PaymentRecord avroRecord = PaymentRecord.newBuilder()
+                    .setId(payment.getId())
+                    .setAmount(payment.getAmount())
+                    .setCurrency(payment.getCurrency())
+                    .setTraceId(traceId)
+                    .build();
+
             // Set message key as payment ID and append headers
             OutgoingKafkaRecordMetadata<String> metadata = OutgoingKafkaRecordMetadata.<String>builder()
                     .withKey(payment.getId())
                     .withHeaders(headers)
                     .build();
 
-            // Emit the message
-            emitter.send(Message.of(jsonPayload, Metadata.of(metadata)));
-            System.out.println("Quarkus: Produced payment successfully: " + payment.getId() + " with trace-id: " + traceId);
+            // Emit the Avro record
+            emitter.send(Message.of(avroRecord, Metadata.of(metadata)));
+            System.out.println("Quarkus: Produced Avro payment successfully: " + payment.getId() + " with trace-id: " + traceId);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize and produce payment message", e);
+            throw new RuntimeException("Failed to produce Avro payment message", e);
         }
     }
 }

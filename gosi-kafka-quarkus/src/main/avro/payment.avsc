@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "PaymentRecord",
+  "namespace": "com.gosi.kafka.avro",
+  "doc": "Avro schema representing payment transactions at GOSI",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "The unique identifier of the payment"
+    },
+    {
+      "name": "amount",
+      "type": "double",
+      "doc": "The transactional amount"
+    },
+    {
+      "name": "currency",
+      "type": "string",
+      "doc": "Three-letter currency code (e.g. SAR)"
+    },
+    {
+      "name": "traceId",
+      "type": "string",
+      "doc": "Mandatory trace-id for end-to-end event tracing"
+    }
+  ]
+}
