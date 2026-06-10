@@ -39,7 +39,7 @@ public class PaymentProducerService {
             // Inject the mandatory trace-id header
             record.headers().add(new RecordHeader("trace-id", traceId.getBytes(StandardCharsets.UTF_8)));
 
-            kafkaTemplate.send(record).whenComplete((result, ex) -> {
+            kafkaTemplate.send(record).completable().whenComplete((result, ex) -> {
                 if (ex == null) {
                     System.out.println("Spring Boot: Produced payment successfully: " + payment.getId() + 
                                        " | Partition: " + result.getRecordMetadata().partition() +

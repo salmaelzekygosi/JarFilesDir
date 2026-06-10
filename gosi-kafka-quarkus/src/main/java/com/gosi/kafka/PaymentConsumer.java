@@ -1,6 +1,6 @@
 package com.gosi.kafka;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import io.smallrye.reactive.messaging.kafka.api.IncomingKafkaRecordMetadata;
 import org.eclipse.microprofile.reactive.messaging.Message;
