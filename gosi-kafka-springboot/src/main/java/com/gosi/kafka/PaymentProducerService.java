@@ -4,24 +4,24 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import com.gosi.kafka.avro.PaymentRecord; // Generated Avro class
 
 @Service
 public class PaymentProducerService {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final KafkaTemplate<String, PaymentRecord> kafkaTemplate;
 
-    public PaymentProducerService(KafkaTemplate<String, String> kafkaTemplate) {
+    @org.springframework.beans.factory.annotation.Value("${app.kafka.topic}")
+    private String topicName;
+
+    public PaymentProducerService(KafkaTemplate<String, PaymentRecord> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
     public void sendPayment(Payment payment) {
         try {
-            String jsonPayload = objectMapper.writeValueAsString(payment);
-            
             // Validate / create traceId
             String traceId = payment.getTraceId();
             if (traceId == null || traceId.isBlank()) {
@@ -29,11 +29,19 @@ public class PaymentProducerService {
                 payment.setTraceId(traceId);
             }
 
-            // Create Producer Record
-            ProducerRecord<String, String> record = new ProducerRecord<>(
-                "payments.demo-topic.v1", 
+            // Construct the Avro PaymentRecord
+            PaymentRecord avroRecord = PaymentRecord.newBuilder()
+                    .setId(payment.getId())
+                    .setAmount(payment.getAmount())
+                    .setCurrency(payment.getCurrency())
+                    .setTraceId(traceId)
+                    .build();
+
+            // Create Producer Record with Avro payload
+            ProducerRecord<String, PaymentRecord> record = new ProducerRecord<>(
+                topicName, 
                 payment.getId(), 
-                jsonPayload
+                avroRecord
             );
 
             // Inject the mandatory trace-id header
@@ -41,17 +49,17 @@ public class PaymentProducerService {
 
             kafkaTemplate.send(record).completable().whenComplete((result, ex) -> {
                 if (ex == null) {
-                    System.out.println("Spring Boot: Produced payment successfully: " + payment.getId() + 
+                    System.out.println("Spring Boot: Produced Avro payment successfully: " + payment.getId() + 
                                        " | Partition: " + result.getRecordMetadata().partition() +
                                        " | Offset: " + result.getRecordMetadata().offset());
                 } else {
-                    System.err.println("Spring Boot: Failed to produce payment: " + ex.getMessage());
+                    System.err.println("Spring Boot: Failed to produce Avro payment: " + ex.getMessage());
                     ex.printStackTrace();
                 }
             });
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize and produce payment", e);
+            throw new RuntimeException("Failed to produce Avro payment message", e);
         }
     }
 }

@@ -5,14 +5,15 @@ import org.apache.kafka.common.header.Header;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
+import com.gosi.kafka.avro.PaymentRecord; // Generated Avro class
 
 @Service
 public class PaymentConsumerService {
 
-    @KafkaListener(topics = "payments.demo-topic.v1", groupId = "kafka-demo-consumer-group")
-    public void listen(ConsumerRecord<String, String> record) {
+    @KafkaListener(topics = "${app.kafka.topic}", groupId = "${spring.kafka.consumer.group-id}")
+    public void listen(ConsumerRecord<String, PaymentRecord> record) {
         String key = record.key();
-        String payload = record.value();
+        PaymentRecord payload = record.value();
         long offset = record.offset();
         int partition = record.partition();
         
@@ -26,12 +27,18 @@ public class PaymentConsumerService {
         }
 
         System.out.println("==================================================");
-        System.out.println("Spring Boot Received Kafka Message:");
+        System.out.println("Spring Boot Received Avro Kafka Message:");
         System.out.println("  Key:        " + key);
         System.out.println("  Partition:  " + partition);
         System.out.println("  Offset:     " + offset);
         System.out.println("  Trace ID:   " + traceId);
-        System.out.println("  Payload:    " + payload);
+        if (payload != null) {
+            System.out.println("  Payload ID: " + payload.getId());
+            System.out.println("  Amount:     " + payload.getAmount());
+            System.out.println("  Currency:   " + payload.getCurrency());
+        } else {
+            System.out.println("  Payload:    null");
+        }
         System.out.println("==================================================");
     }
 }
