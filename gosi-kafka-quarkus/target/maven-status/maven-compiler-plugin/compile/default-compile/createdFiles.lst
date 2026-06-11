@@ -1,4 +1,6 @@
-com\gosi\kafka\Payment.class
-com\gosi\kafka\PaymentProducer.class
+com\gosi\kafka\avro\PaymentRecord$Builder.class
 com\gosi\kafka\PaymentConsumer.class
 com\gosi\kafka\PaymentResource.class
+com\gosi\kafka\avro\PaymentRecord.class
+com\gosi\kafka\Payment.class
+com\gosi\kafka\PaymentProducer.class
