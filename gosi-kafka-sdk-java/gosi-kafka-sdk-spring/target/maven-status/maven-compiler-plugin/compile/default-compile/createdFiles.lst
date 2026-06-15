@@ -1,0 +1,3 @@
+com\gosi\kafka\sdk\spring\GosiKafkaSpringConsumerInterceptor.class
+com\gosi\kafka\sdk\spring\GosiKafkaAutoConfiguration.class
+com\gosi\kafka\sdk\spring\GosiKafkaProperties.class

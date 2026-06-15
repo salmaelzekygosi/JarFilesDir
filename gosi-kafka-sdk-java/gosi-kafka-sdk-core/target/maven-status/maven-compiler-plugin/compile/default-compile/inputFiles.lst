@@ -1,0 +1,16 @@
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\consumer\GosiRecord.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\config\SerializationFormat.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\schema\GosiSchemaRegistryConfig.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\producer\GosiKafkaProducer.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\tracing\TraceContext.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\telemetry\GosiTelemetryReporter.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\auth\MutualTlsAuthHandler.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\auth\SaslPlainAuthHandler.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\consumer\GosiKafkaConsumer.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\auth\AuthenticationHandler.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\config\GosiKafkaClientConfig.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\auth\SaslScramAuthHandler.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\consumer\RecordHandler.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\auth\OAuthBearerAuthHandler.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\telemetry\DeliveryReport.java
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-java\gosi-kafka-sdk-core\src\main\java\com\gosi\kafka\sdk\telemetry\Slf4jTelemetryReporter.java

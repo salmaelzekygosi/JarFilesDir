@@ -1,0 +1,12 @@
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\bin\Release\net8.0\Gosi.Kafka.Sdk.deps.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\bin\Release\net8.0\Gosi.Kafka.Sdk.dll
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\bin\Release\net8.0\Gosi.Kafka.Sdk.pdb
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\Gosi.Kafka.Sdk.csproj.AssemblyReference.cache
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\Gosi.Kafka.Sdk.GeneratedMSBuildEditorConfig.editorconfig
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\Gosi.Kafka.Sdk.AssemblyInfoInputs.cache
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\Gosi.Kafka.Sdk.AssemblyInfo.cs
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\Gosi.Kafka.Sdk.csproj.CoreCompileInputs.cache
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\Gosi.Kafka.Sdk.dll
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\refint\Gosi.Kafka.Sdk.dll
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\Gosi.Kafka.Sdk.pdb
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\gosi-kafka-sdk-dotnet\obj\Release\net8.0\ref\Gosi.Kafka.Sdk.dll
