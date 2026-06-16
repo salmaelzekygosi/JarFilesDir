@@ -79,6 +79,23 @@ public class GosiKafkaProducer<K, V> implements AutoCloseable {
         copyProperty(props, "ssl.truststore.location", "schema.registry.ssl.truststore.location");
         copyProperty(props, "ssl.truststore.password", "schema.registry.ssl.truststore.password");
         copyProperty(props, "ssl.truststore.type", "schema.registry.ssl.truststore.type");
+
+        copyProperty(props, "basic.auth.credentials.source", "schema.registry.basic.auth.credentials.source");
+        copyProperty(props, "basic.auth.user.info", "schema.registry.basic.auth.user.info");
+        copyProperty(props, "schema.registry.basic.auth.credentials.source", "basic.auth.credentials.source");
+        copyProperty(props, "schema.registry.basic.auth.user.info", "basic.auth.user.info");
+
+        copyProperty(props, "bearer.auth.credentials.source", "schema.registry.bearer.auth.credentials.source");
+        copyProperty(props, "bearer.auth.issuer.endpoint.url", "schema.registry.bearer.auth.issuer.endpoint.url");
+        copyProperty(props, "bearer.auth.client.id", "schema.registry.bearer.auth.client.id");
+        copyProperty(props, "bearer.auth.client.secret", "schema.registry.bearer.auth.client.secret");
+        copyProperty(props, "bearer.auth.scope", "schema.registry.bearer.auth.scope");
+
+        copyProperty(props, "schema.registry.bearer.auth.credentials.source", "bearer.auth.credentials.source");
+        copyProperty(props, "schema.registry.bearer.auth.issuer.endpoint.url", "bearer.auth.issuer.endpoint.url");
+        copyProperty(props, "schema.registry.bearer.auth.client.id", "bearer.auth.client.id");
+        copyProperty(props, "schema.registry.bearer.auth.client.secret", "bearer.auth.client.secret");
+        copyProperty(props, "schema.registry.bearer.auth.scope", "bearer.auth.scope");
     }
 
     private void copyProperty(Map<String, Object> props, String sourceKey, String targetKey) {

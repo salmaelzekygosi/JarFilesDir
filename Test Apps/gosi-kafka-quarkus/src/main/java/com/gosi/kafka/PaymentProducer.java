@@ -41,6 +41,7 @@ public class PaymentProducer {
                 propertyName.startsWith("kafka.sasl.") || 
                 propertyName.startsWith("kafka.security.") ||
                 propertyName.startsWith("kafka.basic.") ||
+                propertyName.startsWith("kafka.bearer.auth.") ||
                 propertyName.startsWith("kafka.schema.registry.")) {
                 configProvider.getOptionalValue(propertyName, String.class)
                         .ifPresent(val -> additionalKafkaProps.put(propertyName.substring(6), val));
