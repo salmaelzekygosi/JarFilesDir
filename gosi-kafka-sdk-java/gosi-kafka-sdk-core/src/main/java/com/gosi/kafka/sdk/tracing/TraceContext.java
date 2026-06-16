@@ -13,6 +13,7 @@ import java.util.UUID;
 public class TraceContext {
 
     public static final String TRACE_ID_KEY = "trace_id";
+    public static final String TRACE_ID_KEY_HYPHEN = "trace-id";
     // Legacy support for firebase/nabaa connectors that used camelCase
     public static final String TRACE_ID_KEY_LEGACY = "traceId";
 

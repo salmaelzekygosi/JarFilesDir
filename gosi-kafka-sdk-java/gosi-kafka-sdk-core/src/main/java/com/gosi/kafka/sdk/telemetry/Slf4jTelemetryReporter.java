@@ -82,11 +82,29 @@ public class Slf4jTelemetryReporter implements GosiTelemetryReporter {
         MDC.put("source_topic", sourceTopic);
         MDC.put("dlq_topic", dlqTopic);
         
+        String errorCode = "500";
+        String stackTraceMsg = getStackTrace(cause);
+        MDC.put("error_code", errorCode);
+        MDC.put("stack_trace", stackTraceMsg);
+        
         try {
-            LOG.warn("Message rerouted to DLQ", cause);
+            LOG.warn("Message rerouted to DLQ | trace_id: {} | error_code: {} | stack_trace: {}", 
+                     traceId, errorCode, stackTraceMsg, cause);
         } finally {
             MDC.remove("source_topic");
             MDC.remove("dlq_topic");
+            MDC.remove("error_code");
+            MDC.remove("stack_trace");
         }
+    }
+
+    private String getStackTrace(Throwable throwable) {
+        if (throwable == null) {
+            return "";
+        }
+        java.io.StringWriter sw = new java.io.StringWriter();
+        java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return sw.toString();
     }
 }

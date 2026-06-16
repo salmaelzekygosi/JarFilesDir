@@ -136,7 +136,16 @@ public class GosiKafkaProducer<K, V> implements AutoCloseable {
     
     // Proper wrapper method
     public void sendAsync(String topic, K key, V value) {
-        ProducerRecord<K, V> record = new ProducerRecord<>(topic, key, value);
+        sendAsync(topic, key, value, null);
+    }
+    
+    public void sendAsync(String topic, K key, V value, org.apache.kafka.common.header.Headers headers) {
+        ProducerRecord<K, V> record;
+        if (headers != null) {
+            record = new ProducerRecord<>(topic, null, null, key, value, headers);
+        } else {
+            record = new ProducerRecord<>(topic, key, value);
+        }
         String traceId = TraceContext.injectIntoHeaders(record.headers());
         long startMs = System.currentTimeMillis();
 

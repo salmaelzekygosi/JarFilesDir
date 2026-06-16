@@ -205,16 +205,30 @@ public class GosiKafkaConsumer<K, V> {
     }
 
     private void rerouteToDlq(GosiRecord<K, V> record, Exception cause) {
+        // Clear any existing error headers to avoid duplicate/stale metadata
+        record.getHeaders().remove("error_code");
+        record.getHeaders().remove("stack_trace");
+
         record.getHeaders().add("error_code", "500".getBytes(StandardCharsets.UTF_8));
         
-        String stackTrace = cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+        String stackTrace = getStackTrace(cause);
         record.getHeaders().add("stack_trace", stackTrace.getBytes(StandardCharsets.UTF_8));
         
         // Ensure trace_id is preserved
         TraceContext.injectIntoHeaders(record.getHeaders());
         
-        dlqProducer.sendAsync(dlqTopic, record.getKey(), record.getValue());
+        dlqProducer.sendAsync(dlqTopic, record.getKey(), record.getValue(), record.getHeaders());
         telemetryReporter.onDlqReroute(record.getTopic(), dlqTopic, record.getTraceId(), cause);
+    }
+
+    private String getStackTrace(Throwable throwable) {
+        if (throwable == null) {
+            return "";
+        }
+        java.io.StringWriter sw = new java.io.StringWriter();
+        java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return sw.toString();
     }
 
     private void reportConsumerLag() {
