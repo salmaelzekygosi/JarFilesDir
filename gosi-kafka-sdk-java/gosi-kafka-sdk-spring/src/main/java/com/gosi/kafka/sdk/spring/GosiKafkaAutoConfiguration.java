@@ -25,7 +25,8 @@ public class GosiKafkaAutoConfiguration {
                 .bootstrapServers(properties.getBootstrapServers())
                 .schemaRegistryUrl(properties.getSchemaRegistryUrl())
                 .clientId(properties.getClientId())
-                .groupId(properties.getGroupId());
+                .groupId(properties.getGroupId())
+                .additionalProperties(new java.util.HashMap<String, Object>(properties.getProperties()));
 
         if (properties.getSaslMechanism() != null) {
             boolean useTls = "SASL_SSL".equalsIgnoreCase(properties.getSecurityProtocol());

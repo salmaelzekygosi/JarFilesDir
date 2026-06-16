@@ -12,6 +12,10 @@ import com.gosi.kafka.sdk.config.SerializationFormat;
 import com.gosi.kafka.sdk.consumer.GosiKafkaConsumer;
 import com.gosi.kafka.sdk.telemetry.Slf4jTelemetryReporter;
 import com.gosi.kafka.avro.PaymentRecord;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @ApplicationScoped
@@ -35,12 +39,26 @@ public class PaymentConsumer {
 
     @PostConstruct
     void init() {
+        Map<String, Object> additionalKafkaProps = new HashMap<>();
+        Config configProvider = ConfigProvider.getConfig();
+        for (String propertyName : configProvider.getPropertyNames()) {
+            if (propertyName.startsWith("kafka.ssl.") || 
+                propertyName.startsWith("kafka.sasl.") || 
+                propertyName.startsWith("kafka.security.") ||
+                propertyName.startsWith("kafka.basic.") ||
+                propertyName.startsWith("kafka.schema.registry.")) {
+                configProvider.getOptionalValue(propertyName, String.class)
+                        .ifPresent(val -> additionalKafkaProps.put(propertyName.substring(6), val));
+            }
+        }
+
         GosiKafkaClientConfig config = GosiKafkaClientConfig.builder()
                 .bootstrapServers(bootstrapServers)
                 .groupId(groupId)
                 .schemaRegistryUrl(schemaRegistryUrl)
                 .keyFormat(SerializationFormat.STRING)
                 .valueFormat(SerializationFormat.AVRO)
+                .additionalProperties(additionalKafkaProps)
                 .build();
 
         consumer = new GosiKafkaConsumer<>(config, new Slf4jTelemetryReporter());

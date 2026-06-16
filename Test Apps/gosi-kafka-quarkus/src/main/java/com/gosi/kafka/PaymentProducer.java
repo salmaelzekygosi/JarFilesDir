@@ -11,6 +11,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.gosi.kafka.avro.PaymentRecord; // Generated Avro Class
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import java.util.HashMap;
+import java.util.Map;
 
 @ApplicationScoped
 public class PaymentProducer {
@@ -30,11 +34,25 @@ public class PaymentProducer {
 
     @PostConstruct
     void init() {
+        Map<String, Object> additionalKafkaProps = new HashMap<>();
+        Config configProvider = ConfigProvider.getConfig();
+        for (String propertyName : configProvider.getPropertyNames()) {
+            if (propertyName.startsWith("kafka.ssl.") || 
+                propertyName.startsWith("kafka.sasl.") || 
+                propertyName.startsWith("kafka.security.") ||
+                propertyName.startsWith("kafka.basic.") ||
+                propertyName.startsWith("kafka.schema.registry.")) {
+                configProvider.getOptionalValue(propertyName, String.class)
+                        .ifPresent(val -> additionalKafkaProps.put(propertyName.substring(6), val));
+            }
+        }
+
         GosiKafkaClientConfig config = GosiKafkaClientConfig.builder()
                 .bootstrapServers(bootstrapServers)
                 .schemaRegistryUrl(schemaRegistryUrl)
                 .keyFormat(SerializationFormat.STRING)
                 .valueFormat(SerializationFormat.AVRO)
+                .additionalProperties(additionalKafkaProps)
                 .build();
 
         gosiKafkaProducer = new GosiKafkaProducer<>(config, new Slf4jTelemetryReporter());

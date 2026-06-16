@@ -64,4 +64,8 @@ public class GosiKafkaProperties {
 
     public String getTruststorePassword() { return truststorePassword; }
     public void setTruststorePassword(String truststorePassword) { this.truststorePassword = truststorePassword; }
+
+    private java.util.Map<String, String> properties = new java.util.HashMap<>();
+    public java.util.Map<String, String> getProperties() { return properties; }
+    public void setProperties(java.util.Map<String, String> properties) { this.properties = properties; }
 }

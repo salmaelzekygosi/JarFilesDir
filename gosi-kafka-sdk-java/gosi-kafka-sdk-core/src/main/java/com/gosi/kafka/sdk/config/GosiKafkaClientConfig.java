@@ -29,6 +29,7 @@ public class GosiKafkaClientConfig {
     private final String acks;
     private final boolean enableIdempotence;
     private final String autoOffsetReset;
+    private final Map<String, Object> additionalProperties;
 
     private GosiKafkaClientConfig(Builder builder) {
         this.bootstrapServers = builder.bootstrapServers;
@@ -43,6 +44,7 @@ public class GosiKafkaClientConfig {
         this.acks = builder.acks;
         this.enableIdempotence = builder.enableIdempotence;
         this.autoOffsetReset = builder.autoOffsetReset;
+        this.additionalProperties = new HashMap<>(builder.additionalProperties);
     }
 
     /**
@@ -66,6 +68,9 @@ public class GosiKafkaClientConfig {
         if (authenticationHandler != null) {
             authenticationHandler.configure(props);
         }
+
+        // Apply any additional properties (e.g. SSL truststore)
+        props.putAll(additionalProperties);
 
         return props;
     }
@@ -92,6 +97,9 @@ public class GosiKafkaClientConfig {
         if (authenticationHandler != null) {
             authenticationHandler.configure(props);
         }
+
+        // Apply any additional properties (e.g. SSL truststore)
+        props.putAll(additionalProperties);
 
         return props;
     }
@@ -127,6 +135,7 @@ public class GosiKafkaClientConfig {
         private String acks = "all";
         private boolean enableIdempotence = true;
         private String autoOffsetReset = "earliest";
+        private Map<String, Object> additionalProperties = new HashMap<>();
 
         public Builder bootstrapServers(String bootstrapServers) {
             this.bootstrapServers = bootstrapServers;
@@ -160,6 +169,13 @@ public class GosiKafkaClientConfig {
 
         public Builder valueFormat(SerializationFormat format) {
             this.valueFormat = format;
+            return this;
+        }
+        
+        public Builder additionalProperties(Map<String, Object> properties) {
+            if (properties != null) {
+                this.additionalProperties.putAll(properties);
+            }
             return this;
         }
 

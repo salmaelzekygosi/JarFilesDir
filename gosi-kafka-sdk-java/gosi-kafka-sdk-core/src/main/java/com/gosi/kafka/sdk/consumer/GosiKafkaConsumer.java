@@ -48,6 +48,10 @@ public class GosiKafkaConsumer<K, V> {
     }
 
     private void configureDeserializers(Map<String, Object> props, GosiKafkaClientConfig config) {
+        if (config.getSchemaRegistryUrl() != null && !config.getSchemaRegistryUrl().isEmpty()) {
+            propagateSslPropertiesToSchemaRegistry(props);
+        }
+
         switch (config.getKeyFormat()) {
             case AVRO:
                 props.put("key.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
@@ -78,6 +82,18 @@ public class GosiKafkaConsumer<K, V> {
             default:
                 props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
                 break;
+        }
+    }
+
+    private void propagateSslPropertiesToSchemaRegistry(Map<String, Object> props) {
+        copyProperty(props, "ssl.truststore.location", "schema.registry.ssl.truststore.location");
+        copyProperty(props, "ssl.truststore.password", "schema.registry.ssl.truststore.password");
+        copyProperty(props, "ssl.truststore.type", "schema.registry.ssl.truststore.type");
+    }
+
+    private void copyProperty(Map<String, Object> props, String sourceKey, String targetKey) {
+        if (props.containsKey(sourceKey) && props.get(sourceKey) != null) {
+            props.put(targetKey, props.get(sourceKey));
         }
     }
 
