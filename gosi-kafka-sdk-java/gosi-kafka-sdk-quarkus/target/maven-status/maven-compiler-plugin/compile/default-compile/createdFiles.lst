@@ -1,3 +1,4 @@
 com\gosi\kafka\sdk\quarkus\GosiKafkaQuarkusProducerFactory.class
 com\gosi\kafka\sdk\quarkus\config\GosiKafkaConfigSourceInterceptorFactory.class
 com\gosi\kafka\sdk\quarkus\config\GosiKafkaConfigSourceInterceptor.class
+com\gosi\kafka\sdk\quarkus\tracing\GosiKafkaQuarkusTracingDecorator.class
