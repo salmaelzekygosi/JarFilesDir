@@ -50,16 +50,15 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
         names.add("kafka.ssl.truststore.location");
         names.add("kafka.ssl.truststore.password");
         names.add("kafka.ssl.truststore.type");
-        names.add("kafka.schema.registry.url");
         names.add("mp.messaging.connector.smallrye-kafka.schema.registry.url");
         names.add("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.location");
         names.add("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.password");
         names.add("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.type");
-        names.add("kafka.bearer.auth.credentials.source");
-        names.add("kafka.bearer.auth.issuer.endpoint.url");
-        names.add("kafka.bearer.auth.client.id");
-        names.add("kafka.bearer.auth.client.secret");
-        names.add("kafka.bearer.auth.scope");
+        names.add("mp.messaging.connector.smallrye-kafka.bearer.auth.credentials.source");
+        names.add("mp.messaging.connector.smallrye-kafka.bearer.auth.issuer.endpoint.url");
+        names.add("mp.messaging.connector.smallrye-kafka.bearer.auth.client.id");
+        names.add("mp.messaging.connector.smallrye-kafka.bearer.auth.client.secret");
+        names.add("mp.messaging.connector.smallrye-kafka.bearer.auth.scope");
         
         // Expose default logging format
         names.add("quarkus.log.console.format");
@@ -148,22 +147,22 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
     }
 
     private ConfigValue mapSchemaRegistryProperties(ConfigSourceInterceptorContext context, String name) {
-        if ("mp.messaging.connector.smallrye-kafka.schema.registry.url".equals(name) || "kafka.schema.registry.url".equals(name)) {
+        if ("mp.messaging.connector.smallrye-kafka.schema.registry.url".equals(name)) {
             return getValidConfigValue(context, name, "gosi.kafka.schema-registry-url");
         }
-        if ("kafka.bearer.auth.credentials.source".equals(name) && isOAuthBearer(context)) {
+        if ("mp.messaging.connector.smallrye-kafka.bearer.auth.credentials.source".equals(name) && isOAuthBearer(context)) {
             return gosiValWithValue(name, OAUTHBEARER);
         }
-        if ("kafka.bearer.auth.issuer.endpoint.url".equals(name)) {
+        if ("mp.messaging.connector.smallrye-kafka.bearer.auth.issuer.endpoint.url".equals(name)) {
             return getValidConfigValue(context, name, GOSI_KAFKA_OAUTH_TOKEN_URL);
         }
-        if ("kafka.bearer.auth.client.id".equals(name)) {
+        if ("mp.messaging.connector.smallrye-kafka.bearer.auth.client.id".equals(name)) {
             return getValidConfigValue(context, name, GOSI_KAFKA_USERNAME);
         }
-        if ("kafka.bearer.auth.client.secret".equals(name)) {
+        if ("mp.messaging.connector.smallrye-kafka.bearer.auth.client.secret".equals(name)) {
             return getValidConfigValue(context, name, GOSI_KAFKA_PASSWORD);
         }
-        if ("kafka.bearer.auth.scope".equals(name) && isOAuthBearer(context)) {
+        if ("mp.messaging.connector.smallrye-kafka.bearer.auth.scope".equals(name) && isOAuthBearer(context)) {
             return gosiValWithValue(name, "write");
         }
         if ("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.location".equals(name)) {
