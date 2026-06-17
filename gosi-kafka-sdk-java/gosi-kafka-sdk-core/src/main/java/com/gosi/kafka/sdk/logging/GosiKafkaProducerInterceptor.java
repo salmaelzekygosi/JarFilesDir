@@ -4,17 +4,36 @@ import com.gosi.kafka.sdk.tracing.TraceContext;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.slf4j.MDC;
+
 
 import java.util.Map;
 
 public class GosiKafkaProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
     @Override
-    public ProducerRecord<K, V> onSend(ProducerRecord<K, V> record) {
-        TraceContext.injectIntoHeaders(record.headers());
+    public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
+        String traceId = null;
         
-        return record;
+        // Dynamically extract traceId from Avro payload if present
+        if (producerRecord.value() instanceof org.apache.avro.generic.IndexedRecord avroRec) {
+            org.apache.avro.Schema schema = avroRec.getSchema();
+            
+            if (schema.getField("traceId") != null) {
+                Object val = avroRec.get(schema.getField("traceId").pos());
+                if (val != null) traceId = val.toString();
+            } else if (schema.getField("trace_id") != null) {
+                Object val = avroRec.get(schema.getField("trace_id").pos());
+                if (val != null) traceId = val.toString();
+            }
+        }
+        
+        // Push extracted traceId into MDC so injectIntoHeaders uses it instead of generating a random one
+        if (traceId != null && !traceId.trim().isEmpty()) {
+            org.slf4j.MDC.put(TraceContext.TRACE_ID_KEY, traceId);
+        }
+        
+        TraceContext.injectIntoHeaders(producerRecord.headers());
+        return producerRecord;
     }
 
     @Override

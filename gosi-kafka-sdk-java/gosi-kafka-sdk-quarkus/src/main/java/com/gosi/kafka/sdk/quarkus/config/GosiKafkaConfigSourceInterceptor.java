@@ -15,13 +15,29 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
     private static final String GOSI_KAFKA_PASSWORD = "gosi.kafka.password";
     private static final String GOSI_KAFKA_TRUSTSTORE_LOCATION = "gosi.kafka.truststore-location";
     private static final String OAUTHBEARER = "OAUTHBEARER";
+    private static final String MP_MESSAGING_OUTGOING = "mp.messaging.outgoing.";
+    private static final String MP_MESSAGING_INCOMING = "mp.messaging.incoming.";
+    private static final String INTERCEPTOR_CLASSES_SUFFIX = ".interceptor.classes";
 
     @Override
     public Iterator<String> iterateNames(ConfigSourceInterceptorContext context) {
         Set<String> names = new HashSet<>();
         Iterator<String> originalNames = context.iterateNames();
         while (originalNames.hasNext()) {
-            names.add(originalNames.next());
+            String n = originalNames.next();
+            names.add(n);
+            if (n.startsWith(MP_MESSAGING_OUTGOING)) {
+                String[] parts = n.split("\\.");
+                if (parts.length > 3) {
+                    names.add(MP_MESSAGING_OUTGOING + parts[3] + INTERCEPTOR_CLASSES_SUFFIX);
+                }
+            } else if (n.startsWith(MP_MESSAGING_INCOMING)) {
+                String[] parts = n.split("\\.");
+                if (parts.length > 3) {
+                    names.add(MP_MESSAGING_INCOMING + parts[3] + INTERCEPTOR_CLASSES_SUFFIX);
+                    names.add(MP_MESSAGING_INCOMING + parts[3] + ".mdc-keys");
+                }
+            }
         }
         
         // Expose keys that SmallRye Kafka iterates over to build the Client map
@@ -164,11 +180,15 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
     }
 
     private ConfigValue mapInterceptorProperties(String name) {
-        if (name != null && name.endsWith(".interceptor.classes")) {
-            if (name.startsWith("mp.messaging.outgoing.") || name.startsWith("kafka.producer.")) {
-                return gosiValWithValue(name, "com.gosi.kafka.sdk.logging.GosiKafkaProducerInterceptor");
-            } else if (name.startsWith("mp.messaging.incoming.") || name.startsWith("kafka.consumer.")) {
-                return gosiValWithValue(name, "com.gosi.kafka.sdk.logging.GosiKafkaConsumerInterceptor");
+        if (name != null) {
+            if (name.endsWith(INTERCEPTOR_CLASSES_SUFFIX)) {
+                if (name.startsWith(MP_MESSAGING_OUTGOING) || name.startsWith("kafka.producer.")) {
+                    return gosiValWithValue(name, "com.gosi.kafka.sdk.logging.GosiKafkaProducerInterceptor");
+                } else if (name.startsWith(MP_MESSAGING_INCOMING) || name.startsWith("kafka.consumer.")) {
+                    return gosiValWithValue(name, "com.gosi.kafka.sdk.logging.GosiKafkaConsumerInterceptor");
+                }
+            } else if (name.endsWith(".mdc-keys") && name.startsWith(MP_MESSAGING_INCOMING)) {
+                return gosiValWithValue(name, "trace_id");
             }
         }
         return null;
