@@ -35,13 +35,13 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
 
     private ConfigValue mapGlobalKafkaProperties(ConfigSourceInterceptorContext context, String name) {
         if ("kafka.bootstrap.servers".equals(name)) {
-            return getValidConfigValue(context, "gosi.kafka.bootstrap-servers");
+            return getValidConfigValue(context, name, "gosi.kafka.bootstrap-servers");
         }
         if ("kafka.security.protocol".equals(name)) {
-            return getValidConfigValue(context, "gosi.kafka.security-protocol");
+            return getValidConfigValue(context, name, "gosi.kafka.security-protocol");
         }
         if ("kafka.sasl.mechanism".equals(name)) {
-            return getValidConfigValue(context, GOSI_KAFKA_SASL_MECHANISM);
+            return getValidConfigValue(context, name, GOSI_KAFKA_SASL_MECHANISM);
         }
         return null;
     }
@@ -51,7 +51,7 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
             return gosiValWithValue(name, "org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler");
         }
         if ("kafka.sasl.oauthbearer.token.endpoint.url".equals(name)) {
-            return getValidConfigValue(context, GOSI_KAFKA_OAUTH_TOKEN_URL);
+            return getValidConfigValue(context, name, GOSI_KAFKA_OAUTH_TOKEN_URL);
         }
         if ("kafka.sasl.jaas.config".equals(name) && isOAuthBearer(context)) {
             ConfigValue user = context.proceed(GOSI_KAFKA_USERNAME);
@@ -66,10 +66,10 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
 
     private ConfigValue mapTlsProperties(ConfigSourceInterceptorContext context, String name) {
         if ("kafka.ssl.truststore.location".equals(name)) {
-            return getValidConfigValue(context, GOSI_KAFKA_TRUSTSTORE_LOCATION);
+            return getValidConfigValue(context, name, GOSI_KAFKA_TRUSTSTORE_LOCATION);
         }
         if ("kafka.ssl.truststore.password".equals(name)) {
-            return getValidConfigValue(context, "gosi.kafka.truststore-password");
+            return getValidConfigValue(context, name, "gosi.kafka.truststore-password");
         }
         if ("kafka.ssl.truststore.type".equals(name)) {
             ConfigValue gosiVal = context.proceed(GOSI_KAFKA_TRUSTSTORE_LOCATION);
@@ -80,28 +80,28 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
 
     private ConfigValue mapSchemaRegistryProperties(ConfigSourceInterceptorContext context, String name) {
         if ("mp.messaging.connector.smallrye-kafka.schema.registry.url".equals(name) || "kafka.schema.registry.url".equals(name)) {
-            return getValidConfigValue(context, "gosi.kafka.schema-registry-url");
+            return getValidConfigValue(context, name, "gosi.kafka.schema-registry-url");
         }
         if ("kafka.bearer.auth.credentials.source".equals(name) && isOAuthBearer(context)) {
             return gosiValWithValue(name, OAUTHBEARER);
         }
         if ("kafka.bearer.auth.issuer.endpoint.url".equals(name)) {
-            return getValidConfigValue(context, GOSI_KAFKA_OAUTH_TOKEN_URL);
+            return getValidConfigValue(context, name, GOSI_KAFKA_OAUTH_TOKEN_URL);
         }
         if ("kafka.bearer.auth.client.id".equals(name)) {
-            return getValidConfigValue(context, GOSI_KAFKA_USERNAME);
+            return getValidConfigValue(context, name, GOSI_KAFKA_USERNAME);
         }
         if ("kafka.bearer.auth.client.secret".equals(name)) {
-            return getValidConfigValue(context, GOSI_KAFKA_PASSWORD);
+            return getValidConfigValue(context, name, GOSI_KAFKA_PASSWORD);
         }
         if ("kafka.bearer.auth.scope".equals(name) && isOAuthBearer(context)) {
             return gosiValWithValue(name, "write");
         }
         if ("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.location".equals(name)) {
-            return getValidConfigValue(context, GOSI_KAFKA_TRUSTSTORE_LOCATION);
+            return getValidConfigValue(context, name, GOSI_KAFKA_TRUSTSTORE_LOCATION);
         }
         if ("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.password".equals(name)) {
-            return getValidConfigValue(context, "gosi.kafka.truststore-password");
+            return getValidConfigValue(context, name, "gosi.kafka.truststore-password");
         }
         if ("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.type".equals(name)) {
             ConfigValue gosiVal = context.proceed(GOSI_KAFKA_TRUSTSTORE_LOCATION);
@@ -130,9 +130,17 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
         return val != null && val.getValue() != null;
     }
 
-    private ConfigValue getValidConfigValue(ConfigSourceInterceptorContext context, String key) {
+    private ConfigValue getValidConfigValue(ConfigSourceInterceptorContext context, String requestedName, String key) {
         ConfigValue val = context.proceed(key);
-        return isValid(val) ? val : null;
+        if (isValid(val)) {
+            return ConfigValue.builder()
+                    .withName(requestedName)
+                    .withValue(val.getValue())
+                    .withConfigSourceName(val.getConfigSourceName() != null ? val.getConfigSourceName() : "GosiKafkaConfigSourceInterceptor")
+                    .withConfigSourceOrdinal(val.getConfigSourceOrdinal())
+                    .build();
+        }
+        return null;
     }
 
     private ConfigValue gosiValWithValue(String name, String value) {
