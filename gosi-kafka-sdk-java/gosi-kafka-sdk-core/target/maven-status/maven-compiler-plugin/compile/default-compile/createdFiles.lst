@@ -9,6 +9,7 @@ com\gosi\kafka\sdk\auth\AuthenticationHandler.class
 com\gosi\kafka\sdk\consumer\GosiRecord.class
 com\gosi\kafka\sdk\auth\MutualTlsAuthHandler.class
 com\gosi\kafka\sdk\config\GosiKafkaClientConfig.class
+com\gosi\kafka\sdk\logging\GosiKafkaProducerInterceptor.class
 com\gosi\kafka\sdk\auth\SaslScramAuthHandler.class
 com\gosi\kafka\sdk\tracing\TraceContext.class
 com\gosi\kafka\sdk\producer\GosiKafkaProducer$1.class
@@ -16,4 +17,5 @@ com\gosi\kafka\sdk\producer\GosiKafkaProducer.class
 com\gosi\kafka\sdk\telemetry\GosiTelemetryReporter.class
 com\gosi\kafka\sdk\telemetry\Slf4jTelemetryReporter.class
 com\gosi\kafka\sdk\auth\SaslPlainAuthHandler.class
+com\gosi\kafka\sdk\logging\GosiKafkaConsumerInterceptor.class
 com\gosi\kafka\sdk\telemetry\DeliveryReport.class

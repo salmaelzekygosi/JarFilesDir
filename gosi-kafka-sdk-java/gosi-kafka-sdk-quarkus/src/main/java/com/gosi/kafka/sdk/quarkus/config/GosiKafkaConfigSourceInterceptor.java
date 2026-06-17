@@ -48,11 +48,8 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
         // Expose default logging format
         names.add("quarkus.log.console.format");
         
-        // Also ensure interceptor keys are exposed for the specific channel
-        // However, for channels we'll expose global kafka interceptors just in case
-        names.add("kafka.producer.interceptor.classes");
-        names.add("kafka.consumer.interceptor.classes");
-
+        // Let SmallRye query mp.messaging.outgoing.[channel].interceptor.classes dynamically
+        // We do not add them to the global names list to avoid 'unused' warnings in Kafka
         return names.iterator();
     }
 
