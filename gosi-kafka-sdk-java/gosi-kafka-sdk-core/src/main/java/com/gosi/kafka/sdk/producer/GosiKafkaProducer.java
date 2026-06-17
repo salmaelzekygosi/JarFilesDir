@@ -11,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Encapsulated producer for GOSI applications.
@@ -21,6 +19,10 @@ import java.util.concurrent.TimeUnit;
 public class GosiKafkaProducer<K, V> implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(GosiKafkaProducer.class);
+    
+    private static final String KEY_SERIALIZER = "key.serializer";
+    private static final String VALUE_SERIALIZER = "value.serializer";
+    private static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 
     private final KafkaProducer<K, V> internalProducer;
     private final GosiTelemetryReporter telemetryReporter;
@@ -46,31 +48,31 @@ public class GosiKafkaProducer<K, V> implements AutoCloseable {
 
         switch (config.getKeyFormat()) {
             case AVRO:
-                props.put("key.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(KEY_SERIALIZER, "io.confluent.kafka.serializers.KafkaAvroSerializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 break;
             case JSON_SCHEMA:
-                props.put("key.serializer", "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(KEY_SERIALIZER, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 break;
             case STRING:
             default:
-                props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+                props.put(KEY_SERIALIZER, "org.apache.kafka.common.serialization.StringSerializer");
                 break;
         }
 
         switch (config.getValueFormat()) {
             case AVRO:
-                props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(VALUE_SERIALIZER, "io.confluent.kafka.serializers.KafkaAvroSerializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 break;
             case JSON_SCHEMA:
-                props.put("value.serializer", "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(VALUE_SERIALIZER, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 break;
             case STRING:
             default:
-                props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+                props.put(VALUE_SERIALIZER, "org.apache.kafka.common.serialization.StringSerializer");
                 break;
         }
     }
@@ -109,15 +111,15 @@ public class GosiKafkaProducer<K, V> implements AutoCloseable {
      * Extracts trace_id from MDC or generates one if missing, and injects into headers.
      */
     public java.util.concurrent.CompletableFuture<DeliveryReport> send(String topic, K key, V value) {
-        ProducerRecord<K, V> record = new ProducerRecord<>(topic, key, value);
+        ProducerRecord<K, V> producerRecord = new ProducerRecord<>(topic, key, value);
         
         // Inject trace_id from MDC into headers
-        String traceId = TraceContext.injectIntoHeaders(record.headers());
+        String traceId = TraceContext.injectIntoHeaders(producerRecord.headers());
         
         long startMs = System.currentTimeMillis();
         java.util.concurrent.CompletableFuture<DeliveryReport> future = new java.util.concurrent.CompletableFuture<>();
 
-        internalProducer.send(record, (metadata, exception) -> {
+        internalProducer.send(producerRecord, (metadata, exception) -> {
             long latencyMs = System.currentTimeMillis() - startMs;
             DeliveryReport report;
             if (exception == null) {
@@ -140,16 +142,16 @@ public class GosiKafkaProducer<K, V> implements AutoCloseable {
     }
     
     public void sendAsync(String topic, K key, V value, org.apache.kafka.common.header.Headers headers) {
-        ProducerRecord<K, V> record;
+        ProducerRecord<K, V> producerRecord;
         if (headers != null) {
-            record = new ProducerRecord<>(topic, null, null, key, value, headers);
+            producerRecord = new ProducerRecord<>(topic, null, null, key, value, headers);
         } else {
-            record = new ProducerRecord<>(topic, key, value);
+            producerRecord = new ProducerRecord<>(topic, key, value);
         }
-        String traceId = TraceContext.injectIntoHeaders(record.headers());
+        String traceId = TraceContext.injectIntoHeaders(producerRecord.headers());
         long startMs = System.currentTimeMillis();
 
-        internalProducer.send(record, (metadata, exception) -> {
+        internalProducer.send(producerRecord, (metadata, exception) -> {
             long latencyMs = System.currentTimeMillis() - startMs;
             DeliveryReport report;
             if (exception == null) {

@@ -61,6 +61,35 @@
     </dependencies>
  
     <build>
+        <pluginManagement>
+            <plugins>
+                <!-- This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-antrun-plugin</artifactId>
+                                        <versionRange>[1.0.0,)</versionRange>
+                                        <goals>
+                                            <goal>run</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore/>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.avro</groupId>
@@ -76,6 +105,33 @@
                             <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
                             <outputDirectory>${project.build.directory}/generated-sources/avro</outputDirectory>
                             <stringType>String</stringType>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>suppress-generated-warnings</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}/generated-sources"/>
+                                <replace dir="${project.build.directory}/generated-sources" includes="**/*.java">
+                                    <replacetoken><![CDATA[@SuppressWarnings("all") ]]></replacetoken>
+                                    <replacevalue><![CDATA[]]></replacevalue>
+                                </replace>
+                                <replace dir="${project.build.directory}/generated-sources" includes="**/*.java">
+                                    <replacetoken><![CDATA[public class PaymentRecord extends org.apache.avro.specific.SpecificRecordBase]]></replacetoken>
+                                    <replacevalue><![CDATA[@SuppressWarnings("all") public class PaymentRecord extends org.apache.avro.specific.SpecificRecordBase]]></replacevalue>
+                                </replace>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

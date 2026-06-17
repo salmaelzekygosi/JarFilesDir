@@ -14,7 +14,7 @@ import org.apache.avro.message.SchemaStore;
 
 /** Avro schema representing payment transactions at GOSI */
 @org.apache.avro.specific.AvroGenerated
-public class PaymentRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+       @SuppressWarnings("all") public class PaymentRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = -1879606389345696104L;
 
 

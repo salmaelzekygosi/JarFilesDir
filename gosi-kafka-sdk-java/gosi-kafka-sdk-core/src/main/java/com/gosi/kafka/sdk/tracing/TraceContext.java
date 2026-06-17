@@ -17,6 +17,10 @@ public class TraceContext {
     // Legacy support for firebase/nabaa connectors that used camelCase
     public static final String TRACE_ID_KEY_LEGACY = "traceId";
 
+    private TraceContext() {
+        // Utility class constructor
+    }
+
     /**
      * Initializes the MDC context from Kafka headers.
      * Generates a new UUID if no trace_id is present.

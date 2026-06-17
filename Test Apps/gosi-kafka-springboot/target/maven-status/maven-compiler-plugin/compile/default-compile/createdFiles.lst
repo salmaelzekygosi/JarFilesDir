@@ -1,0 +1,7 @@
+com\gosi\kafka\PaymentController.class
+com\gosi\kafka\avro\PaymentRecord$Builder.class
+com\gosi\kafka\PaymentConsumerService.class
+com\gosi\kafka\SpringBootKafkaApp.class
+com\gosi\kafka\PaymentProducerService.class
+com\gosi\kafka\avro\PaymentRecord.class
+com\gosi\kafka\Payment.class

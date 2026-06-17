@@ -81,7 +81,7 @@ public class PaymentProducer {
             log.info("Quarkus: Produced Avro payment request initiated for: {}", payment.getId());
         } catch (Exception e) {
             log.error("Failed to produce Avro payment message: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to produce Avro payment message", e);
+            throw new org.apache.kafka.common.errors.SerializationException("Failed to produce Avro payment message", e);
         }
     }
 }

@@ -1,7 +1,5 @@
 package com.gosi.kafka.sdk.telemetry;
 
-import java.util.Map;
-
 /**
  * Contract for reporting telemetry metrics like consumer lag and delivery reports.
  */

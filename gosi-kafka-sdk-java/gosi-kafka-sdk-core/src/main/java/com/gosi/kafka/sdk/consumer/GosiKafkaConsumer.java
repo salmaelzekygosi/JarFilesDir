@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,6 +25,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GosiKafkaConsumer<K, V> {
 
     private static final Logger LOG = LoggerFactory.getLogger(GosiKafkaConsumer.class);
+
+    private static final String KEY_DESERIALIZER = "key.deserializer";
+    private static final String VALUE_DESERIALIZER = "value.deserializer";
+    private static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 
     private final KafkaConsumer<K, V> internalConsumer;
     private final GosiTelemetryReporter telemetryReporter;
@@ -54,33 +57,33 @@ public class GosiKafkaConsumer<K, V> {
 
         switch (config.getKeyFormat()) {
             case AVRO:
-                props.put("key.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(KEY_DESERIALIZER, "io.confluent.kafka.serializers.KafkaAvroDeserializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 props.put("specific.avro.reader", "true");
                 break;
             case JSON_SCHEMA:
-                props.put("key.deserializer", "io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(KEY_DESERIALIZER, "io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 break;
             case STRING:
             default:
-                props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+                props.put(KEY_DESERIALIZER, "org.apache.kafka.common.serialization.StringDeserializer");
                 break;
         }
 
         switch (config.getValueFormat()) {
             case AVRO:
-                props.put("value.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(VALUE_DESERIALIZER, "io.confluent.kafka.serializers.KafkaAvroDeserializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 props.put("specific.avro.reader", "true");
                 break;
             case JSON_SCHEMA:
-                props.put("value.deserializer", "io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer");
-                props.put("schema.registry.url", config.getSchemaRegistryUrl());
+                props.put(VALUE_DESERIALIZER, "io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer");
+                props.put(SCHEMA_REGISTRY_URL, config.getSchemaRegistryUrl());
                 break;
             case STRING:
             default:
-                props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+                props.put(VALUE_DESERIALIZER, "org.apache.kafka.common.serialization.StringDeserializer");
                 break;
         }
     }
@@ -147,8 +150,8 @@ public class GosiKafkaConsumer<K, V> {
             while (running.get()) {
                 ConsumerRecords<K, V> records = internalConsumer.poll(Duration.ofMillis(100));
                 
-                for (ConsumerRecord<K, V> record : records) {
-                    processRecord(record);
+                for (ConsumerRecord<K, V> consumerRecord : records) {
+                    processRecord(consumerRecord);
                 }
                 
                 reportConsumerLag();
@@ -163,27 +166,27 @@ public class GosiKafkaConsumer<K, V> {
         }
     }
 
-    private void processRecord(ConsumerRecord<K, V> record) {
-        String traceId = TraceContext.initFromHeaders(record.headers());
+    private void processRecord(ConsumerRecord<K, V> consumerRecord) {
+        String traceId = TraceContext.initFromHeaders(consumerRecord.headers());
         
         GosiRecord<K, V> gosiRecord = new GosiRecord<>(
-            record.key(),
-            record.value(),
-            record.topic(),
-            record.partition(),
-            record.offset(),
+            consumerRecord.key(),
+            consumerRecord.value(),
+            consumerRecord.topic(),
+            consumerRecord.partition(),
+            consumerRecord.offset(),
             traceId,
-            record.headers(),
-            record.timestamp()
+            consumerRecord.headers(),
+            consumerRecord.timestamp()
         );
 
         try {
             handler.handle(gosiRecord);
-            commitOffset(record);
+            commitOffset(consumerRecord);
         } catch (Exception e) {
             if (dlqTopic != null && dlqProducer != null) {
                 rerouteToDlq(gosiRecord, e);
-                commitOffset(record); // Commit offset after successfully moving to DLQ
+                commitOffset(consumerRecord); // Commit offset after successfully moving to DLQ
             } else {
                 LOG.error("Unhandled exception processing record, no DLQ configured.", e);
                 // In production without a DLQ, you might want to pause/stop to avoid data loss
@@ -193,32 +196,32 @@ public class GosiKafkaConsumer<K, V> {
         }
     }
 
-    private void commitOffset(ConsumerRecord<K, V> record) {
-        TopicPartition partition = new TopicPartition(record.topic(), record.partition());
-        OffsetAndMetadata offsetMeta = new OffsetAndMetadata(record.offset() + 1);
+    private void commitOffset(ConsumerRecord<K, V> consumerRecord) {
+        TopicPartition partition = new TopicPartition(consumerRecord.topic(), consumerRecord.partition());
+        OffsetAndMetadata offsetMeta = new OffsetAndMetadata(consumerRecord.offset() + 1);
         Map<TopicPartition, OffsetAndMetadata> currentOffset = Collections.singletonMap(partition, offsetMeta);
         
         internalConsumer.commitAsync(currentOffset, (offsets, exception) -> {
             boolean success = exception == null;
-            telemetryReporter.onOffsetCommit(record.topic(), record.partition(), record.offset(), success, exception);
+            telemetryReporter.onOffsetCommit(consumerRecord.topic(), consumerRecord.partition(), consumerRecord.offset(), success, exception);
         });
     }
 
-    private void rerouteToDlq(GosiRecord<K, V> record, Exception cause) {
+    private void rerouteToDlq(GosiRecord<K, V> gosiRecord, Exception cause) {
         // Clear any existing error headers to avoid duplicate/stale metadata
-        record.getHeaders().remove("error_code");
-        record.getHeaders().remove("stack_trace");
+        gosiRecord.getHeaders().remove("error_code");
+        gosiRecord.getHeaders().remove("stack_trace");
 
-        record.getHeaders().add("error_code", "500".getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("error_code", "500".getBytes(StandardCharsets.UTF_8));
         
         String stackTrace = getStackTrace(cause);
-        record.getHeaders().add("stack_trace", stackTrace.getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("stack_trace", stackTrace.getBytes(StandardCharsets.UTF_8));
         
         // Ensure trace_id is preserved
-        TraceContext.injectIntoHeaders(record.getHeaders());
+        TraceContext.injectIntoHeaders(gosiRecord.getHeaders());
         
-        dlqProducer.sendAsync(dlqTopic, record.getKey(), record.getValue(), record.getHeaders());
-        telemetryReporter.onDlqReroute(record.getTopic(), dlqTopic, record.getTraceId(), cause);
+        dlqProducer.sendAsync(dlqTopic, gosiRecord.getKey(), gosiRecord.getValue(), gosiRecord.getHeaders());
+        telemetryReporter.onDlqReroute(gosiRecord.getTopic(), dlqTopic, gosiRecord.getTraceId(), cause);
     }
 
     private String getStackTrace(Throwable throwable) {
@@ -232,12 +235,7 @@ public class GosiKafkaConsumer<K, V> {
     }
 
     private void reportConsumerLag() {
-        // Simplified lag reporting: in reality, you'd fetch end offsets and subtract current position
-        // This is a placeholder for the actual telemetry integration which we can expand
-        // internalConsumer.endOffsets(internalConsumer.assignment()).forEach((tp, endOffset) -> {
-        //     long position = internalConsumer.position(tp);
-        //     telemetryReporter.onConsumeLag(tp.topic(), tp.partition(), endOffset - position);
-        // });
+        // Simplified lag reporting placeholder
     }
 
     /**

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <mkdir dir="D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-quarkus\target/generated-sources" />
+    <replace includes="**/*.java" dir="D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-quarkus\target/generated-sources">
+      <replacetoken>@SuppressWarnings("all")</replacetoken>
+      <replacevalue></replacevalue>
+    </replace>
+    <replace includes="**/*.java" dir="D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-quarkus\target/generated-sources">
+      <replacetoken>public class PaymentRecord extends org.apache.avro.specific.SpecificRecordBase</replacetoken>
+      <replacevalue>@SuppressWarnings("all") public class PaymentRecord extends org.apache.avro.specific.SpecificRecordBase</replacevalue>
+    </replace>
+  </target>
+</project>

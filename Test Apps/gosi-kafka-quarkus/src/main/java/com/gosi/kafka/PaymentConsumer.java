@@ -1,7 +1,6 @@
 package com.gosi.kafka;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -16,7 +15,6 @@ import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @ApplicationScoped
 public class PaymentConsumer {
@@ -64,10 +62,10 @@ public class PaymentConsumer {
 
         consumer = new GosiKafkaConsumer<>(config, new Slf4jTelemetryReporter());
         
-        consumer.topic(topicName).handler(record -> {
+        consumer.topic(topicName).handler(gosiRecord -> {
             log.info("Quarkus: Processing incoming Avro message | Key: {} | Partition: {} | Offset: {}", 
-                     record.getKey(), record.getPartition(), record.getOffset());
-            log.info("Quarkus payload details | Payment: {}", record.getValue());
+                     gosiRecord.getKey(), gosiRecord.getPartition(), gosiRecord.getOffset());
+            log.info("Quarkus payload details | Payment: {}", gosiRecord.getValue());
         });
 
         // Start consumer in a separate thread to not block Quarkus startup

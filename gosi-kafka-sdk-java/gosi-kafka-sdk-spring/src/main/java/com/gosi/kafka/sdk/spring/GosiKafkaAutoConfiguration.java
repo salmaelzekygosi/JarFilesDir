@@ -26,7 +26,7 @@ public class GosiKafkaAutoConfiguration {
                 .schemaRegistryUrl(properties.getSchemaRegistryUrl())
                 .clientId(properties.getClientId())
                 .groupId(properties.getGroupId())
-                .additionalProperties(new java.util.HashMap<String, Object>(properties.getProperties()));
+                .additionalProperties(new java.util.HashMap<>(properties.getProperties()));
 
         if (properties.getSaslMechanism() != null) {
             boolean useTls = "SASL_SSL".equalsIgnoreCase(properties.getSecurityProtocol());
@@ -41,6 +41,9 @@ public class GosiKafkaAutoConfiguration {
                     break;
                 case "SCRAM-SHA-512":
                     authHandler = new SaslScramAuthHandler(properties.getUsername(), properties.getPassword(), useTls);
+                    break;
+                default:
+                    // Unsupported or standard mechanism
                     break;
             }
             if (authHandler != null) {
@@ -63,7 +66,7 @@ public class GosiKafkaAutoConfiguration {
     }
     
     @Bean
-    public GosiKafkaSpringConsumerInterceptor gosiKafkaSpringConsumerInterceptor() {
-        return new GosiKafkaSpringConsumerInterceptor();
+    public GosiKafkaSpringConsumerInterceptor<Object, Object> gosiKafkaSpringConsumerInterceptor() {
+        return new GosiKafkaSpringConsumerInterceptor<>();
     }
 }

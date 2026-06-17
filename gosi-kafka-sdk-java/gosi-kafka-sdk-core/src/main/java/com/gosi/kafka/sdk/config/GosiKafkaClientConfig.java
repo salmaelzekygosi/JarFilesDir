@@ -7,7 +7,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Immutable configuration class for GOSI Kafka clients.

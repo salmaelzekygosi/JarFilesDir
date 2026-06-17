@@ -13,8 +13,12 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class PaymentResource {
 
+    private final PaymentProducer producer;
+
     @Inject
-    PaymentProducer producer;
+    public PaymentResource(PaymentProducer producer) {
+        this.producer = producer;
+    }
 
     @POST
     public Response createPayment(Payment payment) {
