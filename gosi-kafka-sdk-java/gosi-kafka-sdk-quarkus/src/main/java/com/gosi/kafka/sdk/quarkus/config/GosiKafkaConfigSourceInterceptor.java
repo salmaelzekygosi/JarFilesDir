@@ -3,6 +3,9 @@ package com.gosi.kafka.sdk.quarkus.config;
 import io.smallrye.config.ConfigSourceInterceptor;
 import io.smallrye.config.ConfigSourceInterceptorContext;
 import io.smallrye.config.ConfigValue;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor {
 
@@ -12,6 +15,43 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
     private static final String GOSI_KAFKA_PASSWORD = "gosi.kafka.password";
     private static final String GOSI_KAFKA_TRUSTSTORE_LOCATION = "gosi.kafka.truststore-location";
     private static final String OAUTHBEARER = "OAUTHBEARER";
+
+    @Override
+    public Iterator<String> iterateNames(ConfigSourceInterceptorContext context) {
+        Set<String> names = new HashSet<>();
+        Iterator<String> originalNames = context.iterateNames();
+        while (originalNames.hasNext()) {
+            names.add(originalNames.next());
+        }
+        
+        // Expose keys that SmallRye Kafka iterates over to build the Client map
+        names.add("kafka.bootstrap.servers");
+        names.add("kafka.security.protocol");
+        names.add("kafka.sasl.mechanism");
+        names.add("kafka.sasl.login.callback.handler.class");
+        names.add("kafka.sasl.oauthbearer.token.endpoint.url");
+        names.add("kafka.sasl.jaas.config");
+        names.add("kafka.ssl.truststore.location");
+        names.add("kafka.ssl.truststore.password");
+        names.add("kafka.ssl.truststore.type");
+        names.add("kafka.schema.registry.url");
+        names.add("mp.messaging.connector.smallrye-kafka.schema.registry.url");
+        names.add("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.location");
+        names.add("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.password");
+        names.add("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.type");
+        names.add("kafka.bearer.auth.credentials.source");
+        names.add("kafka.bearer.auth.issuer.endpoint.url");
+        names.add("kafka.bearer.auth.client.id");
+        names.add("kafka.bearer.auth.client.secret");
+        names.add("kafka.bearer.auth.scope");
+        
+        // Also ensure interceptor keys are exposed for the specific channel
+        // However, for channels we'll expose global kafka interceptors just in case
+        names.add("kafka.producer.interceptor.classes");
+        names.add("kafka.consumer.interceptor.classes");
+
+        return names.iterator();
+    }
 
     @Override
     public ConfigValue getValue(ConfigSourceInterceptorContext context, String name) {
