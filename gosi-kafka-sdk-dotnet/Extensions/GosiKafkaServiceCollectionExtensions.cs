@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Gosi.Kafka.Sdk.Config;
 using Gosi.Kafka.Sdk.Auth;
 using Gosi.Kafka.Sdk.Producer;
@@ -25,6 +26,14 @@ namespace Gosi.Kafka.Sdk.Extensions
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 return new LoggerTelemetryReporter(loggerFactory.CreateLogger<LoggerTelemetryReporter>());
+            });
+
+            // Enforce centralized observability console format
+            services.Configure<SimpleConsoleFormatterOptions>(options =>
+            {
+                options.IncludeScopes = true;
+                options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
+                options.SingleLine = true;
             });
 
             // Register Client Config using SDK Builder

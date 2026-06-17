@@ -45,6 +45,9 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
         names.add("kafka.bearer.auth.client.secret");
         names.add("kafka.bearer.auth.scope");
         
+        // Expose default logging format
+        names.add("quarkus.log.console.format");
+        
         // Also ensure interceptor keys are exposed for the specific channel
         // However, for channels we'll expose global kafka interceptors just in case
         names.add("kafka.producer.interceptor.classes");
@@ -70,7 +73,20 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
         val = mapInterceptorProperties(name);
         if (val != null) return val;
 
+        val = mapObservabilityProperties(context, name);
+        if (val != null) return val;
+
         return context.proceed(name);
+    }
+
+    private ConfigValue mapObservabilityProperties(ConfigSourceInterceptorContext context, String name) {
+        if ("quarkus.log.console.format".equals(name)) {
+            ConfigValue existing = context.proceed(name);
+            if (!isValid(existing)) {
+                return gosiValWithValue(name, "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.3}] (thread-%t) [TraceID: %X{trace_id}] %s%e%n");
+            }
+        }
+        return null;
     }
 
     private ConfigValue mapGlobalKafkaProperties(ConfigSourceInterceptorContext context, String name) {
