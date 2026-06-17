@@ -120,3 +120,16 @@ D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\obj
 D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\obj\Debug\net8.0\gosi-kaf.70AB4711.Up2Date
 D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\obj\Debug\net8.0\gosi-kafka-dotnet.genruntimeconfig.cache
 D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\obj\Debug\net8.0\ref\gosi-kafka-dotnet.dll
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish\web.config
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\publish\web.config
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\web.config
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish\appsettings.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish\gosi-kafka-dotnet.deps.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish\gosi-kafka-dotnet.runtimeconfig.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish\gosi-kafka-dotnet.staticwebassets.endpoints.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\appsettings.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\gosi-kafka-dotnet.staticwebassets.endpoints.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\publish\appsettings.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\publish\gosi-kafka-dotnet.deps.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\publish\gosi-kafka-dotnet.runtimeconfig.json
+D:\Event Streams\GOSI New Phase\Gitlab Workspace\Test Apps\gosi-kafka-dotnet\bin\Debug\net8.0\publish_self_contained\publish\gosi-kafka-dotnet.staticwebassets.endpoints.json

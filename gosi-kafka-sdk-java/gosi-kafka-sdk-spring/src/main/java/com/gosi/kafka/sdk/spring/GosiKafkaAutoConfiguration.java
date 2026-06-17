@@ -12,6 +12,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import java.util.Map;
 
 @Configuration
 @ConditionalOnClass(GosiKafkaProducer.class)
@@ -63,6 +67,50 @@ public class GosiKafkaAutoConfiguration {
     @ConditionalOnMissingBean
     public GosiKafkaProducer<Object, Object> gosiKafkaProducer(GosiKafkaClientConfig config) {
         return new GosiKafkaProducer<>(config);
+    }
+    
+    @Bean
+    @ConditionalOnMissingBean
+    public ConsumerFactory<Object, Object> gosiKafkaConsumerFactory(GosiKafkaClientConfig config, GosiKafkaProperties properties) {
+        Map<String, Object> props = config.buildConsumerProperties();
+        
+        // Apply serialization configs based on format
+        if (config.getSchemaRegistryUrl() != null && !config.getSchemaRegistryUrl().isEmpty()) {
+            props.put("schema.registry.url", config.getSchemaRegistryUrl());
+            if ("SASL_SSL".equalsIgnoreCase(properties.getSecurityProtocol()) || "SSL".equalsIgnoreCase(properties.getSecurityProtocol())) {
+                if (properties.getTruststoreLocation() != null) {
+                    props.put("schema.registry.ssl.truststore.location", properties.getTruststoreLocation());
+                    props.put("schema.registry.ssl.truststore.password", properties.getTruststorePassword());
+                    props.put("schema.registry.ssl.truststore.type", "JKS");
+                }
+                if (properties.getSaslMechanism() != null && "OAUTHBEARER".equalsIgnoreCase(properties.getSaslMechanism())) {
+                    props.put("schema.registry.bearer.auth.credentials.source", "OAUTHBEARER");
+                    props.put("schema.registry.bearer.auth.issuer.endpoint.url", properties.getOauthTokenUrl());
+                    props.put("schema.registry.bearer.auth.client.id", properties.getUsername());
+                    props.put("schema.registry.bearer.auth.client.secret", properties.getPassword());
+                    props.put("schema.registry.bearer.auth.scope", "write");
+                }
+            }
+        }
+
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
+        props.put("specific.avro.reader", "true");
+        
+        // Inject SDK Consumer Interceptor
+        props.put(org.apache.kafka.clients.consumer.ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, 
+                  GosiKafkaSpringConsumerInterceptor.class.getName());
+
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ConcurrentKafkaListenerContainerFactory<Object, Object> kafkaListenerContainerFactory(
+            ConsumerFactory<Object, Object> gosiKafkaConsumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(gosiKafkaConsumerFactory);
+        return factory;
     }
     
     @Bean

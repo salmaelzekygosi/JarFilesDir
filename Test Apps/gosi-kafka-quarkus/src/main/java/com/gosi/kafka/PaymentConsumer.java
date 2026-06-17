@@ -1,81 +1,26 @@
 package com.gosi.kafka;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.gosi.kafka.sdk.config.GosiKafkaClientConfig;
-import com.gosi.kafka.sdk.config.SerializationFormat;
-import com.gosi.kafka.sdk.consumer.GosiKafkaConsumer;
-import com.gosi.kafka.sdk.telemetry.Slf4jTelemetryReporter;
 import com.gosi.kafka.avro.PaymentRecord;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 @ApplicationScoped
 public class PaymentConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentConsumer.class);
 
-    private GosiKafkaConsumer<String, PaymentRecord> consumer;
-
-    @ConfigProperty(name = "kafka.bootstrap.servers")
-    String bootstrapServers;
-    
-    @ConfigProperty(name = "mp.messaging.incoming.payments-in.group.id")
-    String groupId;
-    
-    @ConfigProperty(name = "mp.messaging.connector.smallrye-kafka.schema.registry.url")
-    String schemaRegistryUrl;
-
-    @ConfigProperty(name = "mp.messaging.incoming.payments-in.topic")
-    String topicName;
-
-    @PostConstruct
-    void init() {
-        Map<String, Object> additionalKafkaProps = new HashMap<>();
-        Config configProvider = ConfigProvider.getConfig();
-        for (String propertyName : configProvider.getPropertyNames()) {
-            if (propertyName.startsWith("kafka.ssl.") || 
-                propertyName.startsWith("kafka.sasl.") || 
-                propertyName.startsWith("kafka.security.") ||
-                propertyName.startsWith("kafka.basic.") ||
-                propertyName.startsWith("kafka.bearer.auth.") ||
-                propertyName.startsWith("kafka.schema.registry.")) {
-                configProvider.getOptionalValue(propertyName, String.class)
-                        .ifPresent(val -> additionalKafkaProps.put(propertyName.substring(6), val));
-            }
-        }
-
-        GosiKafkaClientConfig config = GosiKafkaClientConfig.builder()
-                .bootstrapServers(bootstrapServers)
-                .groupId(groupId)
-                .schemaRegistryUrl(schemaRegistryUrl)
-                .keyFormat(SerializationFormat.STRING)
-                .valueFormat(SerializationFormat.AVRO)
-                .additionalProperties(additionalKafkaProps)
-                .build();
-
-        consumer = new GosiKafkaConsumer<>(config, new Slf4jTelemetryReporter());
-        
-        consumer.topic(topicName).handler(gosiRecord -> {
-            log.info("Quarkus: Processing incoming Avro message | Key: {} | Partition: {} | Offset: {}", 
-                     gosiRecord.getKey(), gosiRecord.getPartition(), gosiRecord.getOffset());
-            log.info("Quarkus payload details | Payment: {}", gosiRecord.getValue());
-        });
-
-        // Start consumer in a separate thread to not block Quarkus startup
-        new Thread(() -> consumer.start()).start();
-    }
-
-    @PreDestroy
-    void cleanup() {
-        if (consumer != null) {
-            consumer.shutdown();
+    @Incoming("payments-in")
+    public void consume(ConsumerRecord<String, PaymentRecord> record) {
+        log.info("Quarkus Native @Incoming: Processing incoming Avro message | Key: {} | Partition: {} | Offset: {}", 
+                 record.key(), record.partition(), record.offset());
+                 
+        PaymentRecord payload = record.value();
+        if (payload != null) {
+            log.info("Quarkus payload details | ID: {} | Amount: {} | TraceId: {}", 
+                     payload.getId(), payload.getAmount(), payload.getTraceId());
         }
     }
 }

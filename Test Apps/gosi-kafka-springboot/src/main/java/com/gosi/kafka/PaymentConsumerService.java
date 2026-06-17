@@ -12,7 +12,7 @@ public class PaymentConsumerService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentConsumerService.class);
 
-    @KafkaListener(topics = "${app.kafka.topic}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${app.kafka.topic}", groupId = "${gosi.kafka.group-id}")
     public void listen(ConsumerRecord<String, PaymentRecord> record) {
         String key = record.key();
         PaymentRecord payload = record.value();

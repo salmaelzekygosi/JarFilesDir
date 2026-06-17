@@ -2,10 +2,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using Gosi.Kafka.Sdk.Config;
 using Gosi.Kafka.Sdk.Producer;
-using Gosi.Kafka.Sdk.Telemetry;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Gosi.Kafka.Services
@@ -14,20 +11,13 @@ namespace Gosi.Kafka.Services
     {
         private readonly GosiKafkaProducer<string, string> _producer;
 
-        public KafkaProducerService(IConfiguration configuration, ILogger<GosiKafkaProducer<string, string>> logger, ILoggerFactory loggerFactory)
+        public KafkaProducerService(GosiKafkaProducer<string, string> producer)
         {
-            var config = new GosiKafkaClientConfig.Builder()
-                .WithBootstrapServers(configuration["GosiKafka:BootstrapServers"] ?? string.Empty)
-                .WithClientId(configuration["GosiKafka:ClientId"] ?? string.Empty)
-                .WithKeyFormat(SerializationFormat.String)
-                .WithValueFormat(SerializationFormat.String)
-                .Build();
-            
-            var telemetry = new LoggerTelemetryReporter(loggerFactory.CreateLogger<LoggerTelemetryReporter>());
-            _producer = new GosiKafkaProducer<string, string>(config, telemetry, logger);
+            // Fully auto-configured by the SDK!
+            _producer = producer;
         }
 
-        public async Task<DeliveryReport> SendPaymentAsync(Payment payment)
+        public async Task<Gosi.Kafka.Sdk.Telemetry.DeliveryReport> SendPaymentAsync(Payment payment)
         {
             string jsonPayload = JsonSerializer.Serialize(payment);
             
