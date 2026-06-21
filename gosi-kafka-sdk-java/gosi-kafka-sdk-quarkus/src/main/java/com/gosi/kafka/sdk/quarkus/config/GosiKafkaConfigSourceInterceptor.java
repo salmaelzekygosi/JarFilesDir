@@ -13,6 +13,7 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
     private static final String GOSI_KAFKA_OAUTH_TOKEN_URL = "gosi.kafka.oauth-token-url";
     private static final String GOSI_KAFKA_USERNAME = "gosi.kafka.username";
     private static final String GOSI_KAFKA_PASSWORD = "gosi.kafka.password";
+    private static final String GOSI_KAFKA_OAUTH_SCOPE = "gosi.kafka.oauth-scope";
     private static final String GOSI_KAFKA_TRUSTSTORE_LOCATION = "gosi.kafka.truststore-location";
     private static final String OAUTHBEARER = "OAUTHBEARER";
     private static final String MP_MESSAGING_OUTGOING = "mp.messaging.outgoing.";
@@ -124,8 +125,9 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
         if ("kafka.sasl.jaas.config".equals(name) && isOAuthBearer(context)) {
             ConfigValue user = context.proceed(GOSI_KAFKA_USERNAME);
             ConfigValue pass = context.proceed(GOSI_KAFKA_PASSWORD);
-            if (isValid(user) && isValid(pass)) {
-                String jaas = String.format("org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId=\"%s\" clientSecret=\"%s\" scope=\"write\";", user.getValue(), pass.getValue());
+            ConfigValue scope = context.proceed(GOSI_KAFKA_OAUTH_SCOPE);
+            if (isValid(user) && isValid(pass) && isValid(scope)) {
+                String jaas = String.format("org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId=\"%s\" clientSecret=\"%s\" scope=\"%s\";", user.getValue(), pass.getValue(), scope.getValue());
                 return gosiValWithValue(name, jaas);
             }
         }
@@ -163,7 +165,7 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
             return getValidConfigValue(context, name, GOSI_KAFKA_PASSWORD);
         }
         if ("mp.messaging.connector.smallrye-kafka.bearer.auth.scope".equals(name) && isOAuthBearer(context)) {
-            return gosiValWithValue(name, "write");
+            return getValidConfigValue(context, name, GOSI_KAFKA_OAUTH_SCOPE);
         }
         if ("mp.messaging.connector.smallrye-kafka.schema.registry.ssl.truststore.location".equals(name)) {
             return getValidConfigValue(context, name, GOSI_KAFKA_TRUSTSTORE_LOCATION);

@@ -1,6 +1,9 @@
 package com.gosi.kafka.sdk.consumer;
 
+import com.gosi.kafka.sdk.auth.AuthErrorClassifier;
+import com.gosi.kafka.sdk.auth.AuthErrorType;
 import com.gosi.kafka.sdk.config.GosiKafkaClientConfig;
+import com.gosi.kafka.sdk.resilience.ResilienceWrapper;
 import com.gosi.kafka.sdk.telemetry.GosiTelemetryReporter;
 import com.gosi.kafka.sdk.telemetry.Slf4jTelemetryReporter;
 import com.gosi.kafka.sdk.tracing.TraceContext;
@@ -12,7 +15,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
@@ -21,6 +23,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Encapsulated Kafka Consumer that manages the polling loop,
  * MDC trace_id extraction, consumer lag telemetry, and automatic offset commits.
+ * <p>
+ * Supports two DLQ routing modes:
+ * <ul>
+ *   <li>{@link #withResilience(ResilienceWrapper)} — per-stage DLQ with retry, metrics, restart-loop detection</li>
+ *   <li>{@link #withDlq(String, com.gosi.kafka.sdk.producer.GosiKafkaProducer)} — legacy single-topic DLQ (deprecated)</li>
+ * </ul>
+ * </p>
  */
 public class GosiKafkaConsumer<K, V> {
 
@@ -36,8 +45,7 @@ public class GosiKafkaConsumer<K, V> {
     
     private String topic;
     private RecordHandler<K, V> handler;
-    private String dlqTopic;
-    private com.gosi.kafka.sdk.producer.GosiKafkaProducer<K, V> dlqProducer;
+    private ResilienceWrapper<K, V> resilienceWrapper;
 
     public GosiKafkaConsumer(GosiKafkaClientConfig config) {
         this(config, new Slf4jTelemetryReporter());
@@ -127,9 +135,15 @@ public class GosiKafkaConsumer<K, V> {
         return this;
     }
 
-    public GosiKafkaConsumer<K, V> withDlq(String dlqTopic, com.gosi.kafka.sdk.producer.GosiKafkaProducer<K, V> dlqProducer) {
-        this.dlqTopic = dlqTopic;
-        this.dlqProducer = dlqProducer;
+    /**
+     * Configures per-stage resilience with retry, DLQ routing, and metrics.
+     * This is the preferred API over {@link #withDlq(String, com.gosi.kafka.sdk.producer.GosiKafkaProducer)}.
+     *
+     * @param resilienceWrapper the resilience wrapper to use
+     * @return this consumer for chaining
+     */
+    public GosiKafkaConsumer<K, V> withResilience(ResilienceWrapper<K, V> resilienceWrapper) {
+        this.resilienceWrapper = resilienceWrapper;
         return this;
     }
 
@@ -146,6 +160,14 @@ public class GosiKafkaConsumer<K, V> {
         running.set(true);
         LOG.info("Started GosiKafkaConsumer for topic: {}", topic);
 
+        // Record a restart event for restart-loop detection
+        if (resilienceWrapper != null) {
+            resilienceWrapper.recordRestart();
+            if (resilienceWrapper.isInRestartLoop()) {
+                LOG.error("Consumer is in RESTART LOOP — consider investigating root cause before continuing");
+            }
+        }
+
         try {
             while (running.get()) {
                 ConsumerRecords<K, V> records = internalConsumer.poll(Duration.ofMillis(100));
@@ -160,6 +182,14 @@ public class GosiKafkaConsumer<K, V> {
             if (running.get()) {
                 throw e;
             }
+        } catch (Exception e) {
+            // Classify auth/authz errors before propagating
+            AuthErrorType errorType = AuthErrorClassifier.classify(e);
+            if (errorType == AuthErrorType.AUTHENTICATION_FAILURE || errorType == AuthErrorType.AUTHORIZATION_DENIED) {
+                telemetryReporter.onAuthError(errorType.name(), e.getMessage());
+                LOG.error("{} error during consumption | topic={}", errorType, topic, e);
+            }
+            throw e;
         } finally {
             internalConsumer.close();
             LOG.info("Closed GosiKafkaConsumer for topic: {}", topic);
@@ -181,15 +211,26 @@ public class GosiKafkaConsumer<K, V> {
         );
 
         try {
-            handler.handle(gosiRecord);
+            if (resilienceWrapper != null) {
+                // Per-stage resilience: retry + DLQ routing handled by wrapper
+                resilienceWrapper.process(gosiRecord, handler);
+            } else {
+                // Direct handler invocation (legacy path)
+                handler.handle(gosiRecord);
+            }
             commitOffset(consumerRecord);
         } catch (Exception e) {
-            if (dlqTopic != null && dlqProducer != null) {
-                rerouteToDlq(gosiRecord, e);
-                commitOffset(consumerRecord); // Commit offset after successfully moving to DLQ
-            } else {
-                LOG.error("Unhandled exception processing record, no DLQ configured.", e);
-                // In production without a DLQ, you might want to pause/stop to avoid data loss
+            // Classify auth errors distinctly
+            AuthErrorType errorType = AuthErrorClassifier.classify(e);
+            if (errorType == AuthErrorType.AUTHENTICATION_FAILURE || errorType == AuthErrorType.AUTHORIZATION_DENIED) {
+                telemetryReporter.onAuthError(errorType.name(), e.getMessage());
+                LOG.error("{} error processing record | topic={} | trace_id={}",
+                        errorType, consumerRecord.topic(), traceId, e);
+                throw new org.apache.kafka.common.KafkaException(AuthErrorClassifier.classifyAndWrap(e));
+            }
+
+            if (resilienceWrapper == null) {
+                LOG.error("Unhandled exception processing record, ResilienceWrapper is not configured.", e);
             }
         } finally {
             TraceContext.clear();
@@ -207,32 +248,6 @@ public class GosiKafkaConsumer<K, V> {
         });
     }
 
-    private void rerouteToDlq(GosiRecord<K, V> gosiRecord, Exception cause) {
-        // Clear any existing error headers to avoid duplicate/stale metadata
-        gosiRecord.getHeaders().remove("error_code");
-        gosiRecord.getHeaders().remove("stack_trace");
-
-        gosiRecord.getHeaders().add("error_code", "500".getBytes(StandardCharsets.UTF_8));
-        
-        String stackTrace = getStackTrace(cause);
-        gosiRecord.getHeaders().add("stack_trace", stackTrace.getBytes(StandardCharsets.UTF_8));
-        
-        // Ensure trace_id is preserved
-        TraceContext.injectIntoHeaders(gosiRecord.getHeaders());
-        
-        dlqProducer.sendAsync(dlqTopic, gosiRecord.getKey(), gosiRecord.getValue(), gosiRecord.getHeaders());
-        telemetryReporter.onDlqReroute(gosiRecord.getTopic(), dlqTopic, gosiRecord.getTraceId(), cause);
-    }
-
-    private String getStackTrace(Throwable throwable) {
-        if (throwable == null) {
-            return "";
-        }
-        java.io.StringWriter sw = new java.io.StringWriter();
-        java.io.PrintWriter pw = new java.io.PrintWriter(sw);
-        throwable.printStackTrace(pw);
-        return sw.toString();
-    }
 
     private void reportConsumerLag() {
         // Simplified lag reporting placeholder

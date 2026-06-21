@@ -6,6 +6,10 @@ import org.slf4j.MDC;
 
 /**
  * Implements structured logging for telemetry using SLF4J MDC.
+ * <p>
+ * Log fields align with the centralized Splunk pipeline that already aggregates
+ * broker, Flink, Connect worker/task, Schema Registry, REST proxy, and auth/authz events.
+ * </p>
  */
 public class Slf4jTelemetryReporter implements GosiTelemetryReporter {
 
@@ -86,7 +90,7 @@ public class Slf4jTelemetryReporter implements GosiTelemetryReporter {
         MDC.put("source_topic", sourceTopic);
         MDC.put("dlq_topic", dlqTopic);
         
-        String errorCode = "500";
+        String errorCode = "PROCESSING_ERROR";
         String stackTraceMsg = getStackTrace(cause);
         MDC.put("error_code", errorCode);
         MDC.put("stack_trace", stackTraceMsg);
@@ -99,6 +103,94 @@ public class Slf4jTelemetryReporter implements GosiTelemetryReporter {
             MDC.remove("dlq_topic");
             MDC.remove("error_code");
             MDC.remove("stack_trace");
+        }
+    }
+
+    @Override
+    public void onDlqAccumulation(String dlqTopic, long volume, double ratio) {
+        MDC.put("dlq_topic", dlqTopic);
+        MDC.put("dlq_volume", String.valueOf(volume));
+        MDC.put("dlq_ratio", String.format("%.4f", ratio));
+
+        try {
+            LOG.warn("DLQ accumulation alert | dlq_topic={} | volume={} | ratio={}",
+                    dlqTopic, volume, String.format("%.4f", ratio));
+        } finally {
+            MDC.remove("dlq_topic");
+            MDC.remove("dlq_volume");
+            MDC.remove("dlq_ratio");
+        }
+    }
+
+    @Override
+    public void onRetryExhaustion(String topic, String stage, String traceId, int retryCount, Exception lastError) {
+        if (traceId != null) {
+            MDC.put("trace_id", traceId);
+        }
+        MDC.put(KAFKA_TOPIC, topic);
+        MDC.put("processing_stage", stage);
+        MDC.put("retry_count", String.valueOf(retryCount));
+
+        try {
+            LOG.warn("Retry exhausted | topic={} | stage={} | trace_id={} | retries={} | error={}",
+                    topic, stage, traceId, retryCount,
+                    lastError != null ? lastError.getMessage() : "unknown", lastError);
+        } finally {
+            MDC.remove(KAFKA_TOPIC);
+            MDC.remove("processing_stage");
+            MDC.remove("retry_count");
+        }
+    }
+
+    @Override
+    public void onRestartLoopDetected(String consumerGroup, int restartCount, long windowMs) {
+        MDC.put("consumer_group", consumerGroup);
+        MDC.put("restart_count", String.valueOf(restartCount));
+        MDC.put("restart_window_ms", String.valueOf(windowMs));
+
+        try {
+            LOG.error("RESTART LOOP DETECTED | consumer_group={} | restarts={} | window_ms={} | " +
+                            "This exceeds the framework threshold for a poison-pill/CrashLoopBackOff condition",
+                    consumerGroup, restartCount, windowMs);
+        } finally {
+            MDC.remove("consumer_group");
+            MDC.remove("restart_count");
+            MDC.remove("restart_window_ms");
+        }
+    }
+
+    @Override
+    public void onAuthError(String errorType, String detail) {
+        MDC.put("auth_error_type", errorType);
+
+        try {
+            if ("AUTHORIZATION_DENIED".equals(errorType)) {
+                LOG.error("Authorization DENIED (ACL/RBAC) | type={} | detail={}", errorType, detail);
+            } else {
+                LOG.error("Authentication FAILURE | type={} | detail={}", errorType, detail);
+            }
+        } finally {
+            MDC.remove("auth_error_type");
+        }
+    }
+
+    @Override
+    public void onReplayAttempt(String dlqTopic, String targetTopic, String traceId, boolean success) {
+        if (traceId != null) {
+            MDC.put("trace_id", traceId);
+        }
+        MDC.put("dlq_topic", dlqTopic);
+        MDC.put("replay_target_topic", targetTopic);
+
+        try {
+            if (success) {
+                LOG.info("DLQ replay succeeded | dlq={} | target={} | trace_id={}", dlqTopic, targetTopic, traceId);
+            } else {
+                LOG.warn("DLQ replay failed | dlq={} | target={} | trace_id={}", dlqTopic, targetTopic, traceId);
+            }
+        } finally {
+            MDC.remove("dlq_topic");
+            MDC.remove("replay_target_topic");
         }
     }
 

@@ -9,9 +9,9 @@ import com.gosi.kafka.sdk.config.GosiKafkaClientConfig;
 import com.gosi.kafka.sdk.producer.GosiKafkaProducer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Singleton;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -40,6 +40,9 @@ public class GosiKafkaQuarkusProducerFactory {
     
     @ConfigProperty(name = "gosi.kafka.oauth-token-url")
     Optional<String> oauthTokenUrl;
+
+    @ConfigProperty(name = "gosi.kafka.oauth-scope")
+    Optional<String> oauthScope;
 
     @ConfigProperty(name = "gosi.kafka.keystore-location")
     Optional<String> keystoreLocation;
@@ -70,7 +73,7 @@ public class GosiKafkaQuarkusProducerFactory {
                     authHandler = new SaslPlainAuthHandler(username.orElse(""), password.orElse(""), useTls);
                     break;
                 case "OAUTHBEARER":
-                    authHandler = new OAuthBearerAuthHandler(oauthTokenUrl.orElse(""), username.orElse(""), password.orElse(""), useTls);
+                    authHandler = new OAuthBearerAuthHandler(oauthTokenUrl.orElse(""), username.orElse(""), password.orElse(""), oauthScope.orElse("write"), useTls);
                     break;
                 case "SCRAM-SHA-512":
                     authHandler = new SaslScramAuthHandler(username.orElse(""), password.orElse(""), useTls);

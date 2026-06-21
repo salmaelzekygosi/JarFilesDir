@@ -8,9 +8,10 @@ using Confluent.Kafka;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Gosi.Kafka.Sdk.Config;
-using Gosi.Kafka.Sdk.Producer;
+using Gosi.Kafka.Sdk.Resilience;
 using Gosi.Kafka.Sdk.Telemetry;
 using Gosi.Kafka.Sdk.Tracing;
+using Gosi.Kafka.Sdk.Auth;
 using Microsoft.Extensions.Logging;
 using Confluent.Kafka.SyncOverAsync;
 
@@ -25,8 +26,7 @@ public class GosiKafkaConsumer<TKey, TValue> : IDisposable
 
     private string? _topic;
     private Func<GosiRecord<TKey, TValue>, Task>? _handler;
-    private string? _dlqTopic;
-    private GosiKafkaProducer<TKey, TValue>? _dlqProducer;
+    private IResilienceWrapper<TKey, TValue>? _resilienceWrapper;
 
     public GosiKafkaConsumer(
         GosiKafkaClientConfig config,
@@ -73,10 +73,9 @@ public class GosiKafkaConsumer<TKey, TValue> : IDisposable
         return this;
     }
 
-    public GosiKafkaConsumer<TKey, TValue> WithDlq(string dlqTopic, GosiKafkaProducer<TKey, TValue> dlqProducer)
+    public GosiKafkaConsumer<TKey, TValue> WithResilience(IResilienceWrapper<TKey, TValue> resilienceWrapper)
     {
-        _dlqTopic = dlqTopic;
-        _dlqProducer = dlqProducer;
+        _resilienceWrapper = resilienceWrapper;
         return this;
     }
 
@@ -89,6 +88,15 @@ public class GosiKafkaConsumer<TKey, TValue> : IDisposable
 
         _internalConsumer.Subscribe(_topic);
         _logger.LogInformation("Started GosiKafkaConsumer for topic: {Topic}", _topic);
+
+        if (_resilienceWrapper != null)
+        {
+            _resilienceWrapper.RecordRestart();
+            if (_resilienceWrapper.IsInRestartLoop())
+            {
+                _logger.LogCritical("Consumer is in RESTART LOOP — consider investigating root cause before continuing");
+            }
+        }
 
         try
         {
@@ -103,6 +111,11 @@ public class GosiKafkaConsumer<TKey, TValue> : IDisposable
                 }
                 catch (ConsumeException e)
                 {
+                    var authError = AuthErrorClassifier.Classify(e);
+                    if (authError == AuthErrorType.AUTHENTICATION_FAILURE || authError == AuthErrorType.AUTHORIZATION_DENIED)
+                    {
+                        _telemetryReporter.OnAuthError(authError.ToString(), e.Error.Reason);
+                    }
                     _logger.LogError(e, "Error consuming message");
                 }
             }
@@ -134,20 +147,30 @@ public class GosiKafkaConsumer<TKey, TValue> : IDisposable
 
         try
         {
-            await _handler!(gosiRecord);
+            if (_resilienceWrapper != null)
+            {
+                await _resilienceWrapper.ProcessAsync(gosiRecord, _handler!);
+            }
+            else
+            {
+                await _handler!(gosiRecord);
+            }
             CommitOffset(result);
         }
         catch (Exception e)
         {
-            if (_dlqTopic != null && _dlqProducer != null)
+            var authError = AuthErrorClassifier.Classify(e);
+            if (authError == AuthErrorType.AUTHENTICATION_FAILURE || authError == AuthErrorType.AUTHORIZATION_DENIED)
             {
-                await RerouteToDlqAsync(gosiRecord, e);
-                CommitOffset(result); // Commit offset after successfully moving to DLQ
+                _telemetryReporter.OnAuthError(authError.ToString(), e.Message);
+                _logger.LogError(e, "{ErrorType} error processing record | topic={Topic} | trace_id={TraceId}",
+                        authError, result.Topic, traceId);
+                throw AuthErrorClassifier.ClassifyAndWrap(e);
             }
-            else
+
+            if (_resilienceWrapper == null)
             {
-                _logger.LogError(e, "Unhandled exception processing record, no DLQ configured.");
-                // In production without DLQ, depending on requirements, might want to stop/throw
+                _logger.LogError(e, "Unhandled exception processing record, ResilienceWrapper is not configured.");
             }
         }
     }
@@ -165,19 +188,6 @@ public class GosiKafkaConsumer<TKey, TValue> : IDisposable
         }
     }
 
-    private async Task RerouteToDlqAsync(GosiRecord<TKey, TValue> record, Exception cause)
-    {
-        record.Headers.Add("error_code", Encoding.UTF8.GetBytes("500"));
-        
-        var stackTrace = cause.Message ?? cause.GetType().Name;
-        record.Headers.Add("stack_trace", Encoding.UTF8.GetBytes(stackTrace));
-        
-        // Ensure trace_id is preserved in DLQ message
-        TraceContext.InjectIntoHeaders(record.Headers, record.TraceId);
-
-        await _dlqProducer!.ProduceAsync(_dlqTopic!, record.Key, record.Value);
-        _telemetryReporter.OnDlqReroute(record.Topic, _dlqTopic!, record.TraceId, cause);
-    }
 
     public void Shutdown()
     {

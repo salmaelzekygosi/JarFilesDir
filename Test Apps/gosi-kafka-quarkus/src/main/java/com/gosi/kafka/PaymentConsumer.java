@@ -13,14 +13,18 @@ public class PaymentConsumer {
     private static final Logger log = LoggerFactory.getLogger(PaymentConsumer.class);
 
     @Incoming("payments-in")
-    public void consume(ConsumerRecord<String, PaymentRecord> record) {
+    public void consume(ConsumerRecord<String, PaymentRecord> consumerRecord) {
         log.info("Quarkus Native @Incoming: Processing incoming Avro message | Key: {} | Partition: {} | Offset: {}", 
-                 record.key(), record.partition(), record.offset());
+                 consumerRecord.key(), consumerRecord.partition(), consumerRecord.offset());
                  
-        PaymentRecord payload = record.value();
+        PaymentRecord payload = consumerRecord.value();
         if (payload != null) {
             log.info("Quarkus payload details | ID: {} | Amount: {} | TraceId: {}", 
                      payload.getId(), payload.getAmount(), payload.getTraceId());
+                     
+            if (payload.getAmount() < 0) {
+                throw new org.apache.kafka.common.KafkaException("Simulated processing failure! Amount is negative. This will trigger Quarkus DefaultResilienceWrapper and route to DLQ.");
+            }
         }
     }
 }

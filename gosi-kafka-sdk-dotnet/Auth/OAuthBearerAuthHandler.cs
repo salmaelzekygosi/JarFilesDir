@@ -11,9 +11,10 @@ public class OAuthBearerAuthHandler : IAuthenticationHandler
     private readonly string _tokenEndpointUrl;
     private readonly string _clientId;
     private readonly string _clientSecret;
+    private readonly string _oauthScope;
     private readonly bool _useTls;
 
-    public OAuthBearerAuthHandler(string tokenEndpointUrl, string clientId, string clientSecret, bool useTls)
+    public OAuthBearerAuthHandler(string tokenEndpointUrl, string clientId, string clientSecret, string oauthScope, bool useTls)
     {
         if (string.IsNullOrWhiteSpace(tokenEndpointUrl)) throw new ArgumentException("Token endpoint URL cannot be empty");
         if (string.IsNullOrWhiteSpace(clientId)) throw new ArgumentException("Client ID cannot be empty");
@@ -22,6 +23,7 @@ public class OAuthBearerAuthHandler : IAuthenticationHandler
         _tokenEndpointUrl = tokenEndpointUrl;
         _clientId = clientId;
         _clientSecret = clientSecret;
+        _oauthScope = oauthScope;
         _useTls = useTls;
     }
 
@@ -33,6 +35,7 @@ public class OAuthBearerAuthHandler : IAuthenticationHandler
         config.SaslOauthbearerTokenEndpointUrl = _tokenEndpointUrl;
         config.SaslOauthbearerClientId = _clientId;
         config.SaslOauthbearerClientSecret = _clientSecret;
+        config.SaslOauthbearerScope = _oauthScope;
         config.SaslOauthbearerMethod = SaslOauthbearerMethod.Oidc;
     }
 }

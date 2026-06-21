@@ -8,6 +8,7 @@ using Gosi.Kafka.Sdk.Auth;
 using Gosi.Kafka.Sdk.Producer;
 using Gosi.Kafka.Sdk.Consumer;
 using Gosi.Kafka.Sdk.Telemetry;
+using Gosi.Kafka.Sdk.Resilience;
 
 namespace Gosi.Kafka.Sdk.Extensions
 {
@@ -52,12 +53,39 @@ namespace Gosi.Kafka.Sdk.Extensions
                     string clientId = kafkaSection["SaslOauthbearerClientId"] ?? string.Empty;
                     string clientSecret = kafkaSection["SaslOauthbearerClientSecret"] ?? string.Empty;
                     string tokenEndpoint = kafkaSection["SaslOauthbearerTokenEndpointUrl"] ?? string.Empty;
+                    string oauthScope = kafkaSection["SaslOauthbearerScope"] ?? string.Empty;
                     
                     bool useTls = "SASL_SSL".Equals(kafkaSection["SecurityProtocol"], StringComparison.OrdinalIgnoreCase) 
                                || "SSL".Equals(kafkaSection["SecurityProtocol"], StringComparison.OrdinalIgnoreCase);
 
-                    var authHandler = new OAuthBearerAuthHandler(tokenEndpoint, clientId, clientSecret, useTls);
+                    var authHandler = new OAuthBearerAuthHandler(tokenEndpoint, clientId, clientSecret, oauthScope, useTls);
                     builder.WithAuthenticationHandler(authHandler);
+                }
+
+                var resilienceSection = kafkaSection.GetSection("Resilience");
+                if (resilienceSection.Exists())
+                {
+                    var resConfig = new ResilienceConfig
+                    {
+                        Namespace = resilienceSection["Namespace"],
+                        Stage = resilienceSection["Stage"],
+                        SourceTopicName = resilienceSection["SourceTopicName"],
+                    };
+
+                    if (Enum.TryParse<ErrorPolicy>(resilienceSection["ErrorPolicy"], true, out var errorPolicy))
+                        resConfig.ErrorPolicy = errorPolicy;
+                    if (int.TryParse(resilienceSection["MaxRetries"], out int maxRetries))
+                        resConfig.MaxRetries = maxRetries;
+                    if (long.TryParse(resilienceSection["RetryBackoffMs"], out long retryBackoff))
+                        resConfig.RetryBackoffMs = retryBackoff;
+                    if (long.TryParse(resilienceSection["DlqAccumulationAlertThreshold"], out long dlqThreshold))
+                        resConfig.DlqAccumulationAlertThreshold = dlqThreshold;
+                    if (int.TryParse(resilienceSection["RestartLoopThreshold"], out int restartThreshold))
+                        resConfig.RestartLoopThreshold = restartThreshold;
+                    if (long.TryParse(resilienceSection["RestartLoopWindowMs"], out long restartWindowMs))
+                        resConfig.RestartLoopWindowMs = restartWindowMs;
+
+                    builder.WithResilienceConfig(resConfig);
                 }
 
                 return builder.Build();
@@ -66,6 +94,9 @@ namespace Gosi.Kafka.Sdk.Extensions
             // Register Open Generics for Producer and Consumer
             services.AddSingleton(typeof(GosiKafkaProducer<,>));
             services.AddTransient(typeof(GosiKafkaConsumer<,>));
+
+            // Register default resilience wrapper
+            services.AddTransient(typeof(IResilienceWrapper<,>), typeof(DefaultResilienceWrapper<,>));
 
             return services;
         }

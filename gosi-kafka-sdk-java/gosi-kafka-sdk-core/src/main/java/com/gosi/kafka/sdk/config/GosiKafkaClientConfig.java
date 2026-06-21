@@ -4,6 +4,7 @@ import com.gosi.kafka.sdk.auth.AuthenticationHandler;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.SslConfigs;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,10 @@ public class GosiKafkaClientConfig {
     private final boolean enableIdempotence;
     private final String autoOffsetReset;
     private final Map<String, Object> additionalProperties;
+    
+    // Extensions
+    private final String sslEnabledProtocols;
+    private final com.gosi.kafka.sdk.resilience.ResilienceConfig resilienceConfig;
 
     private GosiKafkaClientConfig(Builder builder) {
         this.bootstrapServers = builder.bootstrapServers;
@@ -44,6 +49,8 @@ public class GosiKafkaClientConfig {
         this.enableIdempotence = builder.enableIdempotence;
         this.autoOffsetReset = builder.autoOffsetReset;
         this.additionalProperties = new HashMap<>(builder.additionalProperties);
+        this.sslEnabledProtocols = builder.sslEnabledProtocols;
+        this.resilienceConfig = builder.resilienceConfig;
     }
 
     /**
@@ -115,6 +122,14 @@ public class GosiKafkaClientConfig {
         return valueFormat;
     }
 
+    public String getSslEnabledProtocols() {
+        return sslEnabledProtocols;
+    }
+
+    public com.gosi.kafka.sdk.resilience.ResilienceConfig getResilienceConfig() {
+        return resilienceConfig;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -135,6 +150,9 @@ public class GosiKafkaClientConfig {
         private boolean enableIdempotence = true;
         private String autoOffsetReset = "earliest";
         private Map<String, Object> additionalProperties = new HashMap<>();
+        
+        private String sslEnabledProtocols = "TLSv1.3,TLSv1.2";
+        private com.gosi.kafka.sdk.resilience.ResilienceConfig resilienceConfig;
 
         public Builder bootstrapServers(String bootstrapServers) {
             this.bootstrapServers = bootstrapServers;
@@ -178,6 +196,23 @@ public class GosiKafkaClientConfig {
             return this;
         }
 
+        public Builder additionalProperty(String key, Object value) {
+            this.additionalProperties.put(key, value);
+            return this;
+        }
+
+        public Builder sslEnabledProtocols(String sslEnabledProtocols) {
+            if (sslEnabledProtocols != null && !sslEnabledProtocols.isEmpty()) {
+                this.sslEnabledProtocols = sslEnabledProtocols;
+            }
+            return this;
+        }
+
+        public Builder resilienceConfig(com.gosi.kafka.sdk.resilience.ResilienceConfig resilienceConfig) {
+            this.resilienceConfig = resilienceConfig;
+            return this;
+        }
+
         public GosiKafkaClientConfig build() {
             if (bootstrapServers == null || bootstrapServers.trim().isEmpty()) {
                 throw new IllegalArgumentException("bootstrapServers is required");
@@ -186,6 +221,12 @@ public class GosiKafkaClientConfig {
                     && (schemaRegistryUrl == null || schemaRegistryUrl.trim().isEmpty())) {
                 throw new IllegalArgumentException("schemaRegistryUrl is required when using AVRO or JSON_SCHEMA");
             }
+            
+            // Apply standard organizational defaults for security
+            if (!this.additionalProperties.containsKey(SslConfigs.SSL_ENABLED_PROTOCOLS_CONFIG)) {
+                this.additionalProperties.put(SslConfigs.SSL_ENABLED_PROTOCOLS_CONFIG, this.sslEnabledProtocols);
+            }
+            
             return new GosiKafkaClientConfig(this);
         }
     }

@@ -52,10 +52,13 @@ public class GosiKafkaProducer<TKey, TValue> : IDisposable
         _internalProducer = builder.Build();
     }
 
-    public async Task<DeliveryReport> ProduceAsync(string topic, TKey key, TValue value)
+    public Task<DeliveryReport> ProduceAsync(string topic, TKey key, TValue value)
     {
-        var headers = new Headers();
-        
+        return ProduceAsync(topic, key, value, new Headers());
+    }
+
+    public async Task<DeliveryReport> ProduceAsync(string topic, TKey key, TValue value, Headers headers)
+    {
         // Inject trace_id (creates a new one if not present)
         var traceId = TraceContext.InjectIntoHeaders(headers);
 

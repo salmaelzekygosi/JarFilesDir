@@ -1,5 +1,7 @@
 package com.gosi.kafka.sdk.producer;
 
+import com.gosi.kafka.sdk.auth.AuthErrorClassifier;
+import com.gosi.kafka.sdk.auth.AuthErrorType;
 import com.gosi.kafka.sdk.config.GosiKafkaClientConfig;
 import com.gosi.kafka.sdk.telemetry.DeliveryReport;
 import com.gosi.kafka.sdk.telemetry.GosiTelemetryReporter;
@@ -127,7 +129,14 @@ public class GosiKafkaProducer<K, V> implements AutoCloseable {
                 telemetryReporter.onDeliveryReport(report);
                 future.complete(report);
             } else {
-                report = DeliveryReport.failure(topic, traceId, latencyMs, exception);
+                AuthErrorType authErrorType = AuthErrorClassifier.classify(exception);
+                String authErrorStr = null;
+                if (authErrorType == AuthErrorType.AUTHENTICATION_FAILURE || authErrorType == AuthErrorType.AUTHORIZATION_DENIED) {
+                    authErrorStr = authErrorType.name();
+                    telemetryReporter.onAuthError(authErrorStr, exception.getMessage());
+                }
+                
+                report = DeliveryReport.failure(topic, traceId, latencyMs, exception, authErrorStr);
                 telemetryReporter.onDeliveryReport(report);
                 future.completeExceptionally(exception);
             }
@@ -157,7 +166,13 @@ public class GosiKafkaProducer<K, V> implements AutoCloseable {
             if (exception == null) {
                 report = DeliveryReport.success(topic, metadata.partition(), metadata.offset(), metadata.timestamp(), traceId, latencyMs);
             } else {
-                report = DeliveryReport.failure(topic, traceId, latencyMs, exception);
+                AuthErrorType authErrorType = AuthErrorClassifier.classify(exception);
+                String authErrorStr = null;
+                if (authErrorType == AuthErrorType.AUTHENTICATION_FAILURE || authErrorType == AuthErrorType.AUTHORIZATION_DENIED) {
+                    authErrorStr = authErrorType.name();
+                    telemetryReporter.onAuthError(authErrorStr, exception.getMessage());
+                }
+                report = DeliveryReport.failure(topic, traceId, latencyMs, exception, authErrorStr);
             }
             telemetryReporter.onDeliveryReport(report);
         });

@@ -24,6 +24,8 @@ public class GosiKafkaClientConfig
     public Acks Acks { get; }
     public bool EnableIdempotence { get; }
     public AutoOffsetReset AutoOffsetReset { get; }
+    public Gosi.Kafka.Sdk.Resilience.ResilienceConfig? ResilienceConfig { get; }
+    public string SslEnabledProtocols { get; }
 
     private GosiKafkaClientConfig(Builder builder)
     {
@@ -39,6 +41,8 @@ public class GosiKafkaClientConfig
         Acks = builder._acks;
         EnableIdempotence = builder._enableIdempotence;
         AutoOffsetReset = builder._autoOffsetReset;
+        ResilienceConfig = builder._resilienceConfig;
+        SslEnabledProtocols = builder._sslEnabledProtocols;
     }
 
     public ProducerConfig BuildProducerConfig()
@@ -54,6 +58,8 @@ public class GosiKafkaClientConfig
         };
 
         AuthenticationHandler?.Configure(config);
+        
+        config.Set("ssl.enabled.protocols", SslEnabledProtocols);
 
         return config;
     }
@@ -70,6 +76,8 @@ public class GosiKafkaClientConfig
         };
 
         AuthenticationHandler?.Configure(config);
+
+        config.Set("ssl.enabled.protocols", SslEnabledProtocols);
 
         return config;
     }
@@ -90,6 +98,8 @@ public class GosiKafkaClientConfig
         internal Acks _acks = Acks.All;
         internal bool _enableIdempotence = true;
         internal AutoOffsetReset _autoOffsetReset = AutoOffsetReset.Earliest;
+        internal Gosi.Kafka.Sdk.Resilience.ResilienceConfig? _resilienceConfig;
+        internal string _sslEnabledProtocols = "TLSv1.3,TLSv1.2";
 
         public Builder WithBootstrapServers(string bootstrapServers)
         {
@@ -130,6 +140,21 @@ public class GosiKafkaClientConfig
         public Builder WithValueFormat(SerializationFormat format)
         {
             _valueFormat = format;
+            return this;
+        }
+
+        public Builder WithResilienceConfig(Gosi.Kafka.Sdk.Resilience.ResilienceConfig resilienceConfig)
+        {
+            _resilienceConfig = resilienceConfig;
+            return this;
+        }
+
+        public Builder WithSslEnabledProtocols(string sslEnabledProtocols)
+        {
+            if (!string.IsNullOrWhiteSpace(sslEnabledProtocols))
+            {
+                _sslEnabledProtocols = sslEnabledProtocols;
+            }
             return this;
         }
 

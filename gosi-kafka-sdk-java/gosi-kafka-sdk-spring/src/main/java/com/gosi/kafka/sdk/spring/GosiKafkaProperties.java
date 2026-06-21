@@ -18,6 +18,7 @@ public class GosiKafkaProperties {
     
     // OAuth specific
     private String oauthTokenUrl;
+    private String oauthScope;
     
     // mTLS specific
     private String keystoreLocation;
@@ -53,6 +54,9 @@ public class GosiKafkaProperties {
     public String getOauthTokenUrl() { return oauthTokenUrl; }
     public void setOauthTokenUrl(String oauthTokenUrl) { this.oauthTokenUrl = oauthTokenUrl; }
 
+    public String getOauthScope() { return oauthScope; }
+    public void setOauthScope(String oauthScope) { this.oauthScope = oauthScope; }
+
     public String getKeystoreLocation() { return keystoreLocation; }
     public void setKeystoreLocation(String keystoreLocation) { this.keystoreLocation = keystoreLocation; }
 
@@ -68,4 +72,43 @@ public class GosiKafkaProperties {
     private java.util.Map<String, String> properties = new java.util.HashMap<>();
     public java.util.Map<String, String> getProperties() { return properties; }
     public void setProperties(java.util.Map<String, String> properties) { this.properties = properties; }
+
+    private ResilienceProperties resilience = new ResilienceProperties();
+    public ResilienceProperties getResilience() { return resilience; }
+    public void setResilience(ResilienceProperties resilience) { this.resilience = resilience; }
+
+    public static class ResilienceProperties {
+        private String namespace;
+        private String stage;
+        private String errorPolicy = "CAPTURE_DLQ";
+        private int maxRetries = 3;
+        private long retryBackoffMs = 1000;
+        private long dlqAccumulationAlertThreshold = 100;
+        private int restartLoopThreshold = 3;
+        private long restartLoopWindowMs = 600000;
+
+        public String getNamespace() { return namespace; }
+        public void setNamespace(String namespace) { this.namespace = namespace; }
+
+        public String getStage() { return stage; }
+        public void setStage(String stage) { this.stage = stage; }
+
+        public String getErrorPolicy() { return errorPolicy; }
+        public void setErrorPolicy(String errorPolicy) { this.errorPolicy = errorPolicy; }
+
+        public int getMaxRetries() { return maxRetries; }
+        public void setMaxRetries(int maxRetries) { this.maxRetries = maxRetries; }
+
+        public long getRetryBackoffMs() { return retryBackoffMs; }
+        public void setRetryBackoffMs(long retryBackoffMs) { this.retryBackoffMs = retryBackoffMs; }
+
+        public long getDlqAccumulationAlertThreshold() { return dlqAccumulationAlertThreshold; }
+        public void setDlqAccumulationAlertThreshold(long dlqAccumulationAlertThreshold) { this.dlqAccumulationAlertThreshold = dlqAccumulationAlertThreshold; }
+
+        public int getRestartLoopThreshold() { return restartLoopThreshold; }
+        public void setRestartLoopThreshold(int restartLoopThreshold) { this.restartLoopThreshold = restartLoopThreshold; }
+
+        public long getRestartLoopWindowMs() { return restartLoopWindowMs; }
+        public void setRestartLoopWindowMs(long restartLoopWindowMs) { this.restartLoopWindowMs = restartLoopWindowMs; }
+    }
 }
