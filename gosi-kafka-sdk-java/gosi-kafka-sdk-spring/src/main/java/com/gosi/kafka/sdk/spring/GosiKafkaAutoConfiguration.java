@@ -104,10 +104,6 @@ public class GosiKafkaAutoConfiguration {
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
         props.put("specific.avro.reader", "true");
-        
-        // Inject SDK Consumer Interceptor
-        props.put(org.apache.kafka.clients.consumer.ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, 
-                  GosiKafkaSpringConsumerInterceptor.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
@@ -133,12 +129,16 @@ public class GosiKafkaAutoConfiguration {
     @ConditionalOnMissingBean
     public ConcurrentKafkaListenerContainerFactory<Object, Object> kafkaListenerContainerFactory(
             ConsumerFactory<Object, Object> gosiKafkaConsumerFactory,
-            org.springframework.beans.factory.ObjectProvider<GosiKafkaSpringDlqErrorHandler<Object, Object>> errorHandlerProvider) {
+            org.springframework.beans.factory.ObjectProvider<GosiKafkaSpringDlqErrorHandler<Object, Object>> errorHandlerProvider,
+            GosiKafkaSpringConsumerInterceptor<Object, Object> interceptor) {
             
         ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(gosiKafkaConsumerFactory);
         
         errorHandlerProvider.ifAvailable(factory::setCommonErrorHandler);
+        
+        // Inject SDK Consumer Interceptor into the Spring container factory
+        factory.setRecordInterceptor(interceptor);
         
         return factory;
     }
