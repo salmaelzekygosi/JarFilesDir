@@ -37,7 +37,7 @@ public class PaymentProducerService {
 
         } catch (Exception e) {
             log.error("Exception during sending payment: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to produce Avro payment message", e);
+            throw new org.apache.kafka.common.KafkaException("Failed to produce Avro payment message", e);
         }
     }
 }

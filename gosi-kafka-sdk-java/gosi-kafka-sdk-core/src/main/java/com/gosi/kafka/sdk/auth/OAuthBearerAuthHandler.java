@@ -82,7 +82,7 @@ public class OAuthBearerAuthHandler implements AuthenticationHandler {
         
         // Login callback handler for OIDC token acquisition
         kafkaProperties.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS,
-                "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler");
+                "org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler");
         
         // JAAS config with scope
         String jaasTemplate = "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required " +
