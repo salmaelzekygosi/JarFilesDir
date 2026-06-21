@@ -4,8 +4,8 @@ import javax.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.gosi.kafka.avro.PaymentRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import com.gosi.kafka.avro.PaymentRecord;
 
 @ApplicationScoped
 public class PaymentConsumer {

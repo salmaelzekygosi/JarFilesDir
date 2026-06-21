@@ -37,6 +37,8 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
                 if (parts.length > 3) {
                     names.add(MP_MESSAGING_INCOMING + parts[3] + INTERCEPTOR_CLASSES_SUFFIX);
                     names.add(MP_MESSAGING_INCOMING + parts[3] + ".mdc-keys");
+                    names.add(MP_MESSAGING_INCOMING + parts[3] + ".failure-strategy");
+                    names.add(MP_MESSAGING_INCOMING + parts[3] + ".dead-letter-queue.topic");
                 }
             }
         }
@@ -89,7 +91,56 @@ public class GosiKafkaConfigSourceInterceptor implements ConfigSourceInterceptor
         val = mapObservabilityProperties(context, name);
         if (val != null) return val;
 
+        val = mapResilienceProperties(context, name);
+        if (val != null) return val;
+
         return context.proceed(name);
+    }
+
+    private ConfigValue mapResilienceProperties(ConfigSourceInterceptorContext context, String name) {
+        if (name == null || !name.startsWith(MP_MESSAGING_INCOMING)) {
+            return null;
+        }
+
+        String[] parts = name.split("\\.");
+        if (parts.length <= 4) {
+            return null;
+        }
+
+        String channel = parts[3];
+        String suffix = name.substring((MP_MESSAGING_INCOMING + channel + ".").length());
+        
+        if ("failure-strategy".equals(suffix)) {
+            return getFailureStrategy(context, name);
+        } else if ("dead-letter-queue.topic".equals(suffix)) {
+            return getDlqTopic(context, name);
+        }
+
+        return null;
+    }
+
+    private ConfigValue getFailureStrategy(ConfigSourceInterceptorContext context, String name) {
+        if (isCaptureDlq(context)) {
+            return gosiValWithValue(name, "dead-letter-queue");
+        }
+        return null;
+    }
+
+    private ConfigValue getDlqTopic(ConfigSourceInterceptorContext context, String name) {
+        if (isCaptureDlq(context)) {
+            ConfigValue namespace = context.proceed("gosi.kafka.resilience.namespace");
+            ConfigValue stage = context.proceed("gosi.kafka.resilience.stage");
+            if (isValid(namespace) && isValid(stage)) {
+                String dlqTopic = String.format("%s.dlq.%s.v1", namespace.getValue(), stage.getValue());
+                return gosiValWithValue(name, dlqTopic);
+            }
+        }
+        return null;
+    }
+
+    private boolean isCaptureDlq(ConfigSourceInterceptorContext context) {
+        ConfigValue errorPolicy = context.proceed("gosi.kafka.resilience.error-policy");
+        return isValid(errorPolicy) && "CAPTURE_DLQ".equalsIgnoreCase(errorPolicy.getValue());
     }
 
     private ConfigValue mapObservabilityProperties(ConfigSourceInterceptorContext context, String name) {
