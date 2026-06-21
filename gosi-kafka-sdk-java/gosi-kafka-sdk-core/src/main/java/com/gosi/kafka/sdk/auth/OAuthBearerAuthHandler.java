@@ -69,7 +69,7 @@ public class OAuthBearerAuthHandler implements AuthenticationHandler {
      * @deprecated Use the 5-argument constructor with explicit scope instead.
      *             Scope is a required config field per organizational standards.
      */
-    @Deprecated
+    @Deprecated(since = "1.0.0")
     public OAuthBearerAuthHandler(String tokenEndpointUrl, String clientId, String clientSecret, boolean useTls) {
         this(tokenEndpointUrl, clientId, clientSecret, "write", useTls);
     }
@@ -93,6 +93,9 @@ public class OAuthBearerAuthHandler implements AuthenticationHandler {
                 
         kafkaProperties.put(SaslConfigs.SASL_JAAS_CONFIG,
                 String.format(jaasTemplate, clientId, clientSecret, scope, tokenEndpointUrl));
+
+        // Required by the 'secured' OAuthBearerLoginCallbackHandler in Kafka 3.1+
+        kafkaProperties.put("sasl.oauthbearer.token.endpoint.url", tokenEndpointUrl);
 
         // Proactive token refresh — refresh ahead of expiry
         // Refresh when 80% of token lifetime has elapsed (default is 0.8)
