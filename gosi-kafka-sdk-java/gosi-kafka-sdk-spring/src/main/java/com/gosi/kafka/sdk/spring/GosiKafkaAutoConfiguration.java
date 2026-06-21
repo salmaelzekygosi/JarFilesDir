@@ -29,12 +29,19 @@ public class GosiKafkaAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public GosiKafkaClientConfig gosiKafkaClientConfig(GosiKafkaProperties properties) {
+        Map<String, Object> props = new java.util.HashMap<>(properties.getProperties());
+        if (properties.getTruststoreLocation() != null) {
+            props.put("ssl.truststore.location", properties.getTruststoreLocation());
+            props.put("ssl.truststore.password", properties.getTruststorePassword());
+            props.put("ssl.truststore.type", "JKS");
+        }
+
         GosiKafkaClientConfig.Builder builder = GosiKafkaClientConfig.builder()
                 .bootstrapServers(properties.getBootstrapServers())
                 .schemaRegistryUrl(properties.getSchemaRegistryUrl())
                 .clientId(properties.getClientId())
                 .groupId(properties.getGroupId())
-                .additionalProperties(new java.util.HashMap<>(properties.getProperties()));
+                .additionalProperties(props);
 
         if (properties.getSaslMechanism() != null) {
             boolean useTls = SASL_SSL.equalsIgnoreCase(properties.getSecurityProtocol());
