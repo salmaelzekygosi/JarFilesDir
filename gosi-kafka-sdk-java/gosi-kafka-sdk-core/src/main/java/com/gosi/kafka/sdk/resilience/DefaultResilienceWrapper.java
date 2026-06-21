@@ -64,34 +64,34 @@ public class DefaultResilienceWrapper<K, V> implements ResilienceWrapper<K, V> {
     }
 
     @Override
-    public void process(GosiRecord<K, V> record, RecordHandler<K, V> handler) throws Exception {
+    public void process(GosiRecord<K, V> gosiRecord, RecordHandler<K, V> handler) throws Exception {
         mainTopicVolume.incrementAndGet();
 
         if (config.getErrorPolicy() == ErrorPolicy.FAIL_FAST) {
-            processFailFast(record, handler);
+            processFailFast(gosiRecord, handler);
         } else {
-            processWithRetryAndDlq(record, handler);
+            processWithRetryAndDlq(gosiRecord, handler);
         }
     }
 
-    private void processFailFast(GosiRecord<K, V> record, RecordHandler<K, V> handler) throws Exception {
+    private void processFailFast(GosiRecord<K, V> gosiRecord, RecordHandler<K, V> handler) throws Exception {
         try {
-            handler.handle(record);
+            handler.handle(gosiRecord);
         } catch (Exception e) {
             LOG.error("FAIL_FAST: Processing error — stopping immediately | stage={} | trace_id={} | topic={}",
-                    config.getProcessingStage(), record.getTraceId(), record.getTopic(), e);
+                    config.getProcessingStage(), gosiRecord.getTraceId(), gosiRecord.getTopic(), e);
             trackErrorPattern(e);
-            throw e;
+            throw new org.apache.kafka.common.KafkaException("Fail fast processing error", e);
         }
     }
 
-    private void processWithRetryAndDlq(GosiRecord<K, V> record, RecordHandler<K, V> handler) throws Exception {
+    private void processWithRetryAndDlq(GosiRecord<K, V> gosiRecord, RecordHandler<K, V> handler) throws Exception {
         Exception lastException = null;
         int attempt = 0;
 
         while (attempt <= config.getMaxRetries()) {
             try {
-                handler.handle(record);
+                handler.handle(gosiRecord);
                 return; // Success
             } catch (Exception e) {
                 lastException = e;
@@ -100,13 +100,13 @@ public class DefaultResilienceWrapper<K, V> implements ResilienceWrapper<K, V> {
                 if (attempt <= config.getMaxRetries()) {
                     LOG.warn("Retry {}/{} | stage={} | trace_id={} | error={}",
                             attempt, config.getMaxRetries(), config.getProcessingStage(),
-                            record.getTraceId(), e.getMessage());
+                            gosiRecord.getTraceId(), e.getMessage());
                     
                     try {
                         Thread.sleep(config.getRetryBackoffMs() * attempt); // Linear backoff
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
-                        throw new RuntimeException("Retry interrupted", ie);
+                        throw new org.apache.kafka.common.KafkaException("Retry interrupted", ie);
                     }
                 }
             }
@@ -115,11 +115,11 @@ public class DefaultResilienceWrapper<K, V> implements ResilienceWrapper<K, V> {
         // All retries exhausted — route to DLQ
         retryExhaustionCount.incrementAndGet();
         trackErrorPattern(lastException);
-        routeToDlq(record, lastException, attempt - 1);
+        routeToDlq(gosiRecord, lastException, attempt - 1);
 
         telemetryReporter.onRetryExhaustion(
-                record.getTopic(), config.getProcessingStage(),
-                record.getTraceId(), attempt - 1, lastException);
+                gosiRecord.getTopic(), config.getProcessingStage(),
+                gosiRecord.getTraceId(), attempt - 1, lastException);
 
         // Check DLQ accumulation alert threshold
         long currentDlqVolume = dlqVolume.get();
@@ -129,43 +129,43 @@ public class DefaultResilienceWrapper<K, V> implements ResilienceWrapper<K, V> {
         }
     }
 
-    private void routeToDlq(GosiRecord<K, V> record, Exception cause, int retryCount) {
+    private void routeToDlq(GosiRecord<K, V> gosiRecord, Exception cause, int retryCount) {
         dlqVolume.incrementAndGet();
 
         // Clear any existing error headers to avoid duplicate/stale metadata
-        record.getHeaders().remove("error_code");
-        record.getHeaders().remove("stack_trace");
-        record.getHeaders().remove("processing_stage");
-        record.getHeaders().remove("original_topic");
-        record.getHeaders().remove("original_offset");
-        record.getHeaders().remove("retry_count");
-        record.getHeaders().remove("failure_timestamp");
+        gosiRecord.getHeaders().remove("error_code");
+        gosiRecord.getHeaders().remove("stack_trace");
+        gosiRecord.getHeaders().remove("processing_stage");
+        gosiRecord.getHeaders().remove("original_topic");
+        gosiRecord.getHeaders().remove("original_offset");
+        gosiRecord.getHeaders().remove("retry_count");
+        gosiRecord.getHeaders().remove("failure_timestamp");
 
         // Standardized DLQ headers matching existing Splunk dashboards
         String errorCode = deriveErrorCode(cause);
-        record.getHeaders().add("error_code", errorCode.getBytes(StandardCharsets.UTF_8));
-        record.getHeaders().add("stack_trace", getStackTrace(cause).getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("error_code", errorCode.getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("stack_trace", getStackTrace(cause).getBytes(StandardCharsets.UTF_8));
         
         // Ensure trace_id is preserved
-        TraceContext.injectIntoHeaders(record.getHeaders());
+        TraceContext.injectIntoHeaders(gosiRecord.getHeaders());
 
         // Enrichment headers
-        record.getHeaders().add("processing_stage", config.getProcessingStage().getBytes(StandardCharsets.UTF_8));
-        record.getHeaders().add("original_topic", record.getTopic().getBytes(StandardCharsets.UTF_8));
-        record.getHeaders().add("original_offset", String.valueOf(record.getOffset()).getBytes(StandardCharsets.UTF_8));
-        record.getHeaders().add("retry_count", String.valueOf(retryCount).getBytes(StandardCharsets.UTF_8));
-        record.getHeaders().add("failure_timestamp", String.valueOf(System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("processing_stage", config.getProcessingStage().getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("original_topic", gosiRecord.getTopic().getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("original_offset", String.valueOf(gosiRecord.getOffset()).getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("retry_count", String.valueOf(retryCount).getBytes(StandardCharsets.UTF_8));
+        gosiRecord.getHeaders().add("failure_timestamp", String.valueOf(System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8));
 
         try {
-            dlqProducer.sendAsync(dlqTopicName, record.getKey(), record.getValue(), record.getHeaders());
-            telemetryReporter.onDlqReroute(record.getTopic(), dlqTopicName, record.getTraceId(), cause);
+            dlqProducer.sendAsync(dlqTopicName, gosiRecord.getKey(), gosiRecord.getValue(), gosiRecord.getHeaders());
+            telemetryReporter.onDlqReroute(gosiRecord.getTopic(), dlqTopicName, gosiRecord.getTraceId(), cause);
             
             LOG.warn("Routed to DLQ | dlq={} | stage={} | trace_id={} | error_code={} | retries={}",
-                    dlqTopicName, config.getProcessingStage(), record.getTraceId(), errorCode, retryCount);
+                    dlqTopicName, config.getProcessingStage(), gosiRecord.getTraceId(), errorCode, retryCount);
         } catch (Exception dlqError) {
             LOG.error("CRITICAL: Failed to route to DLQ — potential data loss | dlq={} | trace_id={}",
-                    dlqTopicName, record.getTraceId(), dlqError);
-            throw new RuntimeException("DLQ routing failed for trace_id=" + record.getTraceId(), dlqError);
+                    dlqTopicName, gosiRecord.getTraceId(), dlqError);
+            throw new org.apache.kafka.common.KafkaException("DLQ routing failed for trace_id=" + gosiRecord.getTraceId(), dlqError);
         }
     }
 
